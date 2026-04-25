@@ -1,0 +1,27 @@
+# Lingkungan Virtual Python
+myenv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Konfigurasi & Kredensial (Sangat Penting!)
+.env
+.env.local
+
+# File Log & Data Sementara Crawler
+output.txt
+test_output.txt
+debug_*.txt
+berita_negatif_*.txt
+*_dump.*
+*.html
+
+# Database Cache Crawler
+processed_urls.json
+url_cache.json
+priority_stats.json
+
+# File Pengujian
+test_*.py
+scratch_*.py
