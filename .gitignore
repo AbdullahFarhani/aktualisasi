@@ -25,3 +25,4 @@ priority_stats.json
 # File Pengujian
 test_*.py
 scratch_*.py
+config.py.bak

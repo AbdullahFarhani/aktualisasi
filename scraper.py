@@ -363,15 +363,22 @@ KATA_KUNCI_PROFIL = [
 
 def ekstrak_halaman_redaksi_global(soup, base_url):
     """
-    v5.57: Mencari dan mengunjungi hingga 3 tautan potensial untuk mendapatkan profil media yang lengkap.
-    Mendukung deteksi pada footer, header, dan body.
+    v5.73: Mencari dan mengunjungi hingga 5 tautan potensial untuk mendapatkan profil media yang lengkap.
+    Mendukung deteksi pada footer, header, dan body. Dilengkapi Hardcode Injection untuk 20+ jaringan media
+    dan Full-Text Fallback jika Anchor Slicing gagal.
     """
     potensial_links = []
     links = soup.find_all('a', href=True)
     
-    # Kriteria Pencarian (v5.70: Diperluas ke Promedia/Disway/iNews)
-    patterns = ['/redaksi', '/editorial', '/about-us', '/kontak', '/contact-us', '/tentang-kami', '/susunan-redaksi', 'kontak-kami', 'redaksi-radar-bangsa', 'kontak.html', 'about/', '/boks-redaksi', 'readstatik', '/page/']
-    kw_texts = ['redaksi', 'editorial', 'susunan', 'tentang kami', 'kontak', 'hubungi', 'management', 'about us', 'boks redaksi', 'redaksi kami']
+    # Kriteria Pencarian (v5.73: Ekspansi Masif)
+    patterns = ['/redaksi', '/editorial', '/about-us', '/kontak', '/contact-us', '/tentang-kami', '/susunan-redaksi',
+                'kontak-kami', 'redaksi-radar-bangsa', 'kontak.html', 'about/', '/boks-redaksi', 'readstatik', '/page/',
+                'profil-madu-tv', 'struktur-dalam-media', 'tentang-tagar', 'redaksi-tagar', 'hubungi-kami',
+                'kabar-surabaya', '/redaksi-2', '/tentangkami', '/box-redaksi', '/pages/redaksi', '/pages/tentang',
+                '/pages/kontak', 'pedoman-media', 'meet-us', 'meet']
+    kw_texts = ['redaksi', 'editorial', 'susunan', 'tentang kami', 'kontak', 'hubungi', 'management', 'about us',
+                'boks redaksi', 'redaksi kami', 'struktur dalam media', 'tim redaksi', 'informasi redaksi',
+                'box redaksi', 'bok redaksi', 'meet us', 'tentang bhirawa', 'meet the team']
 
     for l in links:
         href = l['href'].lower()
@@ -381,40 +388,179 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
             full_url = urljoin(base_url, l['href'])
             if full_url not in potensial_links and full_url != base_url:
                 potensial_links.append(full_url)
+                
+    parsed_base = urlparse(base_url)
+    base_domain = parsed_base.netloc.lower()
     
-    # Sortir: Prioritaskan yang mengandung 'redaksi' atau 'editorial'
-    potensial_links.sort(key=lambda x: 0 if 'redaksi' in x or 'editorial' in x else 1)
+    # === INJEKSI HARDCODE URL PROFIL (Prioritas Tertinggi) v5.75 ===
+    # Kompas Network (inside.kompas.com)
+    if 'kompas.com' in base_domain:
+        potensial_links.insert(0, "https://inside.kompas.com/about-us#meet")
+        potensial_links.insert(0, "https://inside.kompas.com/about-us")
+    # Kompas TV (berbeda domain dari kompas.com)
+    elif 'kompas.tv' in base_domain:
+        potensial_links.insert(0, "https://www.kompas.tv/contact-us")
+        potensial_links.insert(0, "https://www.kompas.tv/about-us")
+    # Espos / Solopos Network
+    elif 'espos.id' in base_domain or 'solopos.com' in base_domain:
+        potensial_links.insert(0, "https://www.espos.id/page/kontak")
+        potensial_links.insert(0, "https://www.espos.id/page/about-us")
+    # iNews Network (regional + fallback ke www.inews.id)
+    elif 'inews.id' in base_domain:
+        # Selalu fallback ke www.inews.id karena subdomain regional tidak punya halaman profil sendiri
+        potensial_links.insert(0, "https://www.inews.id/page/kontak-kami")
+        potensial_links.insert(0, "https://www.inews.id/page/redaksi")
+        potensial_links.insert(0, "https://www.inews.id/page/tentang-kami")
+    # Madu TV
+    elif 'madu.tv' in base_domain:
+        potensial_links.insert(0, "https://madu.tv/kontak/")
+        potensial_links.insert(0, "https://madu.tv/struktur-dalam-media-madutv-nusantara/")
+        potensial_links.insert(0, "https://madu.tv/profil-madu-tv/")
+    # Tagar Jatim
+    elif 'tagarjatim.id' in base_domain:
+        potensial_links.insert(0, "https://tagarjatim.id/redaksi-tagar-jatim/")
+        potensial_links.insert(0, "https://tagarjatim.id/tentang-tagar-jatim/")
+    # Kabar Surabaya (Blogspot-style)
+    elif 'kabarsurabaya.org' in base_domain:
+        potensial_links.insert(0, "https://www.kabarsurabaya.org/2021/10/susunan-redaksi-kabar-surabaya.html")
+        potensial_links.insert(0, "https://www.kabarsurabaya.org/p/hubungi-kami.html")
+    # BeritaSatu
+    elif 'beritasatu.com' in base_domain:
+        potensial_links.insert(0, "https://www.beritasatu.com/tentang-kami")
+        potensial_links.insert(0, "https://www.beritasatu.com/redaksi")
+    # BiozTV
+    elif 'bioztv.id' in base_domain:
+        potensial_links.insert(0, "https://www.bioztv.id/contact-us/")
+        potensial_links.insert(0, "https://www.bioztv.id/redaksi-2/")
+    # Jawapos Radar Network
+    elif 'jawapos.com' in base_domain:
+        sub = parsed_base.netloc  # e.g. radarmojokerto.jawapos.com
+        potensial_links.insert(0, f"https://{sub}/kontak")
+        potensial_links.insert(0, f"https://{sub}/redaksi")
+        potensial_links.insert(0, f"https://{sub}/about-us")
+    # KlikJatim
+    elif 'klikjatim.com' in base_domain:
+        potensial_links.insert(0, "https://klikjatim.com/pages/kontak-kami")
+        potensial_links.insert(0, "https://klikjatim.com/pages/redaksi")
+    # Realita.co
+    elif 'realita.co' in base_domain:
+        potensial_links.insert(0, "https://realita.co/pages/tentang-kami")
+        potensial_links.insert(0, "https://realita.co/pages/redaksi")
+    # Harian Bhirawa
+    elif 'harianbhirawa.co.id' in base_domain:
+        potensial_links.insert(0, "https://harianbhirawa.co.id/tentangkami/")
+    # Detik Network
+    elif 'detik.com' in base_domain:
+        potensial_links.insert(0, "https://www.detik.com/redaksi")
+    # Memorandum / Disway Network
+    elif 'disway.id' in base_domain or 'memorandum' in base_domain:
+        sub = parsed_base.netloc  # e.g. memorandum.disway.id
+        potensial_links.insert(0, f"https://{sub}/readstatik/115/kontak")
+        potensial_links.insert(0, f"https://{sub}/readstatik/1/redaksi")
+        potensial_links.insert(0, f"https://{sub}/readstatik/2/tentang-kami")
+    # BuserJatim
+    elif 'buserjatim.com' in base_domain:
+        potensial_links.insert(0, "https://buserjatim.com/box-redaksi/")
+    # Tribunnews Regional
+    elif 'tribunnews.com' in base_domain:
+        sub = parsed_base.netloc  # e.g. jatim.tribunnews.com
+        if sub != 'www.tribunnews.com':
+            potensial_links.insert(0, f"https://{sub}/contact-us/")
+            potensial_links.insert(0, f"https://{sub}/redaksi/")
+        potensial_links.insert(0, "https://www.tribunnews.com/about/")
+    # JPNN
+    elif 'jpnn.com' in base_domain:
+        potensial_links.insert(0, "https://www.jpnn.com/page/tentang-kami")
+        potensial_links.insert(0, "https://www.jpnn.com/page/redaksi")
+    
+    # Menghapus duplikat sambil mempertahankan urutan (mengutamakan hasil hardcode)
+    potensial_links = list(dict.fromkeys(potensial_links))
     
     hasil_gabungan = []
-    # Kunjungi maksimal 3 link sampai data cukup
-    for target_url in potensial_links[:3]:
+    # v5.73: Kunjungi maksimal 5 link (naik dari 3) untuk profiling lebih lengkap
+    for target_url in potensial_links[:5]:
         print(f"[*] Menyelidiki profil media di: {target_url}")
         html = resilient_download(target_url, timeout=12, max_retries=2, target="redaksi")
         if html:
             rsoup = BeautifulSoup(html, 'html.parser')
+            
+            # v5.75: JAWAPOS SPA JSON PARSER — Ekstrak data kontak dari atribut data-page
+            # Jawapos Radar menggunakan SPA (React/Vue) di mana data kontak ada di JSON, bukan teks HTML
+            if 'jawapos.com' in target_url:
+                data_div = rsoup.find('div', attrs={'data-page': True})
+                if data_div:
+                    try:
+                        import json as _json
+                        page_data = _json.loads(data_div['data-page'])
+                        factory = page_data.get('props', {}).get('factory', {})
+                        if factory:
+                            jp_info = []
+                            jp_info.append(f"Nama Media: {factory.get('PUBLISHER_NAME', factory.get('TITLE', ''))}")
+                            jp_info.append(f"Alamat: {factory.get('ADDRESS', '-')}")
+                            jp_info.append(f"Telepon: {factory.get('PHONE', '-')}")
+                            jp_info.append(f"Fax: {factory.get('FAX', '-')}")
+                            jp_info.append(f"Email: {factory.get('EMAIL', '-')}")
+                            jp_info.append(f"WhatsApp: {factory.get('WHATSAPP', '-')}")
+                            jp_info.append(f"WhatsApp Channel: {factory.get('WHATSAPP_CHANNEL', '-')}")
+                            jp_info.append(f"Facebook: {factory.get('FACEBOOK', '-')}")
+                            jp_info.append(f"Instagram: {factory.get('INSTAGRAM', '-')}")
+                            jp_info.append(f"Twitter: {factory.get('TWITTER', '-')}")
+                            jp_info.append(f"Copyright: {factory.get('COPYRIGHT', '-')}")
+                            jp_fragment = "\n".join(jp_info)
+                            if len(jp_fragment) > 50:
+                                print(f"[+] Jawapos SPA JSON Parser: Berhasil ekstrak profil dari data-page!")
+                                hasil_gabungan.append(jp_fragment)
+                                if len(hasil_gabungan) >= 2: continue
+                    except Exception as e_jp:
+                        print(f"[-] Jawapos JSON Parser gagal: {str(e_jp)[:50]}")
+            
             # Bersihkan elemen pengganggu
             for s in rsoup(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'ins']): s.decompose()
             
             raw_text = rsoup.get_text(" ", strip=True)
-            # v5.70: Anchor Slicing Multi-Keyword (Diperlebar)
-            anchor_match = re.search(r'(.{0,500})(susunan redaksi|pimpinan umum|pimpinan redaksi|dewan redaksi|penasihat|redaksi radar bangsa|penerbit|kontak kami|about us|tentang kami|alamat redaksi|email|hubungi kami|kontak)(.{0,2500})', raw_text, re.I)
+            # v5.73: Anchor Slicing Multi-Keyword (Diperlebar dari 2500 -> 5000, keyword diperkaya)
+            anchor_match = re.search(
+                r'(.{0,500})(susunan redaksi|pimpinan umum|pimpinan redaksi|dewan redaksi|penasihat'
+                r'|redaksi radar bangsa|penerbit|kontak kami|about us|tentang kami|alamat redaksi'
+                r'|hubungi kami|struktur dalam media|tentang tagar|kabar surabaya|box redaksi|bok redaksi'
+                r'|susunan pengurus|tim redaksi|jajaran redaksi|informasi redaksi|susunan manajemen'
+                r'|profil redaksi|pemimpin umum|penanggung jawab|dewan pendiri|dewan pembina'
+                r'|alamat redaksi|meet us|meet the team|boks redaksi|media cyber'
+                r'|kompas cyber media|akta pendirian|pt\s+\w+\s+(intermedia|cyber|media|gruop|pers)'
+                r'|email\s*:|telp|telepon|whatsapp|wa\s*:)(.{0,5000})',
+                raw_text, re.I
+            )
             
             if anchor_match:
                 fragmen = (anchor_match.group(1) + anchor_match.group(2) + anchor_match.group(3)).strip()
                 if len(fragmen) > 100:
                     hasil_gabungan.append(fragmen)
-                    if len(hasil_gabungan) >= 2: break # Cukup 2 sumber informasi
+                    if len(hasil_gabungan) >= 2: break  # Cukup 2 sumber informasi
+            else:
+                # v5.73: Full-Text Fallback — jika tidak ada keyword match, ambil seluruh teks bersih
+                # Ini berguna untuk halaman redaksi dengan format non-standar
+                if len(raw_text) > 200 and any(kw in raw_text.lower() for kw in ['redaksi', 'kontak', 'alamat', 'telp', 'email', 'pemimpin', 'reporter', 'wartawan', 'editor', 'penanggung jawab']):
+                    hasil_gabungan.append(raw_text[:5000])
+                    if len(hasil_gabungan) >= 2: break
     
-    # v5.57: Cross-Domain Fallback untuk Tribun & Media Besar
+    # v5.75: Cross-Domain Fallback untuk Tribun, iNews & Kompas TV (diperluas)
     if not hasil_gabungan:
-        parsed_base = urlparse(base_url)
-        if 'tribunnews.com' in parsed_base.netloc and parsed_base.netloc != 'www.tribunnews.com':
+        if 'tribunnews.com' in base_domain and base_domain != 'www.tribunnews.com':
             main_redaksi = "https://www.tribunnews.com/about/"
             print(f"[*] Cross-Domain Fallback (Tribun Network): {main_redaksi}")
             html_main = resilient_download(main_redaksi, timeout=10, max_retries=1, target="redaksi")
             if html_main:
                 msoup = BeautifulSoup(html_main, 'html.parser')
-                hasil_gabungan.append(msoup.get_text(" ", strip=True)[:3000])
+                hasil_gabungan.append(msoup.get_text(" ", strip=True)[:5000])
+        elif 'inews.id' in base_domain and base_domain != 'www.inews.id':
+            for fallback_url in ["https://www.inews.id/page/redaksi", "https://www.inews.id/page/kontak-kami"]:
+                print(f"[*] Cross-Domain Fallback (iNews Network): {fallback_url}")
+                html_fb = resilient_download(fallback_url, timeout=10, max_retries=1, target="redaksi")
+                if html_fb:
+                    fbsoup = BeautifulSoup(html_fb, 'html.parser')
+                    for s in fbsoup(['script', 'style', 'nav']): s.decompose()
+                    hasil_gabungan.append(fbsoup.get_text(" ", strip=True)[:5000])
+                    break
 
     return "\n---\n".join(hasil_gabungan) if hasil_gabungan else ""
 
@@ -1330,8 +1476,8 @@ def extract_article(artikel_obj):
                             for m in matches:
                                 found_url = m.group(1).split('\\')[0].split('"')[0].split("'")[0].split("&amp;")[0].strip()
                                 
-                                # VALIDASI KETAT: Harus ada kemiripan domain dengan publisher atau trusted network
-                                if all(x not in found_url for x in ["google", "gstatic", "facebook", "twitter", "analytics", "doubleclick", "adservice"]):
+                                # VALIDASI KETAT: Harus ada kemiripan domain dengan publisher atau trusted network (v5.72 Block Bing Leak)
+                                if all(x not in found_url for x in ["google", "gstatic", "facebook", "twitter", "analytics", "doubleclick", "adservice", "bing", "yahoo"]):
                                     # v5.44: Greedy Trust - Jika mengandung domain hint atau jaringan Jatim, ambil!
                                     if any(t in found_url.lower() for t in trusted_list) or any(n in found_url.lower() for n in ["radar", "tribun", "jawapos", "kompas", "detik", "suryamalang", "surya.co.id"]):
                                         real_url = found_url
@@ -1347,7 +1493,7 @@ def extract_article(artikel_obj):
                 mobile_headers = get_human_headers(mode="mobile")
                 res_prime = requests.get(real_url, headers=mobile_headers, timeout=10, allow_redirects=True)
                 
-                if "google.com" not in res_prime.url:
+                if "google.com" not in res_prime.url and "bing.com" not in res_prime.url:
                     real_url = res_prime.url
                 else:
                     # 1. JSON-LD & SCHEMA MINER (Lapis 2.8 - v4.20)
@@ -1466,6 +1612,12 @@ def extract_article(artikel_obj):
                             real_url = canonical_url
                             print(f"[+] Canonical Link Terdeteksi Dini: {real_url}")
         except: pass
+        
+        # v5.75: FINAL URL VALIDATOR — Tolak URL mesin pencari yang bocor
+        search_engine_leak = ['bing.com/search', 'google.com/search', 'yahoo.com/search', 'duckduckgo.com/?q', 'yandex.com/search']
+        if any(se in real_url.lower() for se in search_engine_leak):
+            print(f"[!] BLOCKED: URL final adalah halaman mesin pencari: {real_url[:60]}... -> DITOLAK.")
+            return None
         
         # v5.4: FULL CONTENT DOWNLOAD WITH PAGINATION SUPPORT
         html_content = resilient_download_full(real_url, timeout=12, target="google")

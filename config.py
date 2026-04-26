@@ -1,23 +1,23 @@
 import os
 
 # Konfigurasi HuggingFace Token (v5.65)
-os.environ["HF_TOKEN"] = "[REDACTED_HF_TOKEN]"
+os.environ["HF_TOKEN"] = "hf_YOUR_TOKEN_HERE"
 
 # Konfigurasi Telegram
-TELEGRAM_BOT_TOKEN = "[REDACTED_TELEGRAM_TOKEN_1]"
-TELEGRAM_CHAT_ID = "[REDACTED_CHAT_ID_1]"
+TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+TELEGRAM_CHAT_ID = "YOUR_CHAT_ID_HERE"
 
-TELEGRAM_BOT_TOKEN_2 = "[REDACTED_TELEGRAM_TOKEN_2]"
-TELEGRAM_CHAT_ID_2 = "[REDACTED_CHAT_ID_2]"
+TELEGRAM_BOT_TOKEN_2 = "YOUR_BOT_TOKEN_2_HERE"
+TELEGRAM_CHAT_ID_2 = "YOUR_CHAT_ID_2_HERE"
 
 # API Key Google Gemini
-GEMINI_API_KEY = "[REDACTED_GEMINI_API_KEY]"
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
 
 # API Key OpenRouter (Gunakan Model Qwen / Llama Gratis)
-OPENROUTER_API_KEY = "[REDACTED_OPENROUTER_API_KEY]"
+OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY_HERE"
 
 # API Key Groq (30 RPM, 14.400 RPD - Super Cepat & Longgar)
-GROQ_API_KEY = "[REDACTED_GROQ_API_KEY]"
+GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"
 
 # Daftar Model Groq untuk Rotasi (Menghindari 429)
 GROQ_MODELS = [
@@ -165,30 +165,30 @@ FORBIDDEN_KEYWORDS = [
 #     "prostitusi"
 # ]
 
-# v5.71: Reguler Ancaman Jatim (Sniper Mode)
+# v5.75: Reguler Ancaman Jatim (Expanded Coverage)
 KATA_KUNCI = [
     "korupsi dana desa", "pungli", "penyuapan", "gratifikasi",
-    "demo anarkis", "bentrok warga", "sengketa lahan",
-    "darurat sampah", "pembunuhan", "narkoba"
+    "demo anarkis", "bentrok warga", "sengketa lahan", "aksi damai",
+    "sampah", "narkoba",
+    "KDRT", "aparat", "fiktif", "modus",
+    "pupuk ilegal", "rokok ilegal",
+    "koperasi", "kdkmp", "kopdes", "kdmp", "kmp",
+    "bbm", "spbu"
 ]
 
-# v5.46: Daftar Kata Kunci PRIORITAS (MBG, Koperasi Merah Putih, Jembatan, Oknum TNI)
-# PRIORITY_KATA_KUNCI = [
-#     "mbg", "makan bergizi gratis", "koperasi merah putih", 
-#     "jembatan", "jembatan ambruk", "jembatan rusak", "jembatan putus",
-#     "oknum tni", "pengeroyokan tni", "prajurit tni bermasalah",
-#     "ketahanan pangan tni", "tmmd", "babinsa mbg", 
-#     "tentara manunggal membangun desa", "kdkmp", "knmp", 
-#     "kampung nelayan merah putih", "proyek tni"
-# ]
-
-# v5.71: Daftar Kata Kunci PRIORITAS (Sniper Mode)
+# v5.75: Daftar Kata Kunci PRIORITAS (Expanded Sniper Mode)
 PRIORITY_KATA_KUNCI = [
-    "mbg keracunan", "kasus mbg", "makan bergizi gratis",
+    # MBG & SPPG
+    "mbg", "makan bergizi gratis", "mbg keracunan", "kasus mbg", "sppg", "keracunan",
+    # Koperasi
     "koperasi merah putih", "korupsi koperasi",
-    "jembatan ambruk", "jembatan rusak", "jembatan putus",
-    "oknum tni", "tni bermasalah", "tni arogan", "oknum aparat", "oknum prajurit",
-    "program pemerintah tni"
+    # Jembatan
+    "jembatan", "proyek jembatan",
+    # TNI & Aparat (Expanded)
+    "oknum TNI", "oknum aparat", "TNI bermasalah", "TNI viral", "TNI",
+    "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
+    "keluarga TNI", "istri TNI", "anak TNI", "persit", "personel TNI",
+    "wanita tni", "kowad", "tentara nasional indonesia"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota

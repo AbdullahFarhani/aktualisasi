@@ -147,6 +147,12 @@ def filter_new_articles(articles, history_file='processed_urls.json'):
     for art in articles:
         url = art.get('url', '')
         
+        # 0. v5.73: TOLAK URL Mesin Pencari (Bing/Google/Yahoo Search) — Bukan berita valid
+        search_engine_patterns = ['bing.com/search', 'google.com/search', 'yahoo.com/search', 'duckduckgo.com/?q', 'yandex.com/search']
+        if any(se in url.lower() for se in search_engine_patterns):
+            print(f"[-] Terfilter (URL Mesin Pencari): '{art.get('title', '')[:40]}...' -> Dibuang.")
+            continue
+        
         # 1. Pastikan belum diproses
         if not url or url in processed:
             continue
