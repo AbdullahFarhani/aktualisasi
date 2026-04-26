@@ -26,3 +26,17 @@ priority_stats.json
 test_*.py
 scratch_*.py
 config.py.bak
+
+# File tidak penting
+generate_docx.py
+generate_notula.py
+generate_paparan.py
+debug_pipe.py
+scrape_redaksi.py
+test_*.py
+scratch_*.py
+*.bak
+output.txt
+processed_urls.json
+url_cache.json
+__pycache__/
