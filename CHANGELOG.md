@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.86] — 2026-04-28
+### Sniper 50 — 6-Hour Cycle Optimization
+- **Optimalisasi Kata Kunci**: Mengurangi total kata kunci dari 75 menjadi **tepat 50 kata kunci** untuk mengejar target penyelesaian 1 siklus dalam 6 jam.
+- **Reguler (15)**: Menghapus redundansi korupsi/gratifikasi dan isu broad seperti BBM/Fiktif.
+- **Prioritas (35)**: Mempertahankan isu atensi pimpinan dengan diksi paling efektif (MBG, Koperasi, TNI, Yon TP, LGBT, Cerai, Medsos).
+- Mempertahankan keyword wajib: **sampah, aksi damai, yon tp, TNI, kmp, TNI cerai**.
+
+---
+
 ## [v5.85] — 2026-04-28
 ### Instant Sniper Decoder (Offline Resolving)
 - **Zero-Request Resolving**: Memperbarui `decode_google_news_url_local` dengan teknik *Binary Stream Analysis* untuk membongkar URL Google News secara offline.

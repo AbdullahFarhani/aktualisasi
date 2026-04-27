@@ -159,47 +159,33 @@ FORBIDDEN_KEYWORDS = [
 #     "oplosan",
 #     "sesat",
 #     "radikalisme",
-#     "tambang ilegal",
-#     "proyek fiktif",
-#     "perjudian",
-#     "prostitusi"
-# ]
-
-# v5.81: Reguler Ancaman Jatim (Optimized to 21)
+# v5.86: Reguler Ancaman Jatim (Optimized to 15)
 KATA_KUNCI = [
-    "korupsi", "pungli", "penyuapan", "gratifikasi",
-    "demo anarkis", "bentrok warga", "sengketa lahan", "narkoba",
-    "sampah", "aksi damai",
-    "KDRT", "aparat", "fiktif", "modus",
+    "korupsi", "pungli", "demo anarkis", "sengketa lahan", "narkoba",
+    "sampah", "aksi damai", "KDRT", "aparat", 
     "pupuk ilegal", "rokok ilegal",
-    "kdkmp", "kopdes", "kmp", "kdmp",
-    "bbm", "spbu"
+    "kdkmp", "kopdes", "kmp", "spbu"
 ]
 
-# v5.81: Daftar Kata Kunci PRIORITAS (Optimized to 54)
+# v5.86: Daftar Kata Kunci PRIORITAS (Optimized to 35)
 PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
-    "mbg", "makan bergizi gratis", "mbg keracunan", "kasus mbg", "sppg", "keracunan",
-    # Koperasi
-    "koperasi merah putih", "korupsi koperasi", "koperasi",
-    # Jembatan
-    "jembatan", "proyek jembatan",
-    # TNI & Aparat (Expanded)
-    "TNI", "oknum TNI", "oknum aparat", "TNI bermasalah", "TNI viral",
+    "makan bergizi gratis", "mbg keracunan", "sppg",
+    # Koperasi & Jembatan
+    "koperasi merah putih", "korupsi koperasi", "proyek jembatan",
+    # TNI & Aparat (Sniper Mode)
+    "TNI", "oknum TNI", "TNI bermasalah", "TNI viral",
     "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
-    "keluarga TNI", "istri TNI", "anak TNI", "persit", "personel TNI",
-    "wanita tni", "kowad", "tentara nasional indonesia",
+    "keluarga TNI", "istri TNI",
     # Yon TP (Batalyon Teritorial Pembangunan)
-    "yon tp", "batalyon", "batalyon teritorial pembangunan",
+    "batalyon teritorial pembangunan", "yon tp",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "TNI cerai", "cerai anggota", "perceraian TNI", "perceraian prajurit",
-    "gugat cerai TNI", "cerai tentara",
+    "cerai TNI", "TNI cerai", "perceraian TNI", "gugat cerai TNI",
     # 2. Isu LGBT
-    "LGBT TNI", "LGBT tentara", "LGBT militer", "gay TNI", "gay tentara",
+    "LGBT TNI", "LGBT tentara", "gay TNI",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "resepsi mewah tentara",
-    "pernikahan mewah prajurit", "pesta pernikahan TNI",
+    "pernikahan mewah TNI", "resepsi mewah tentara", "pesta pernikahan TNI",
     # 4. Medsos Keluarga
     "medsos TNI", "medsos istri TNI", "medsos keluarga TNI",
     "viral istri TNI", "viral keluarga TNI", "flexing TNI", "pamer TNI",
