@@ -165,17 +165,18 @@ FORBIDDEN_KEYWORDS = [
 #     "prostitusi"
 # ]
 
-# v5.79: Reguler Ancaman Jatim (Optimized to 20)
+# v5.80: Reguler Ancaman Jatim (Optimized to 21)
 KATA_KUNCI = [
-    "korupsi dana desa", "pungli", "penyuapan", "gratifikasi",
+    "korupsi", "pungli", "penyuapan", "gratifikasi",
     "demo anarkis", "bentrok warga", "sengketa lahan", "narkoba",
+    "sampah", "aksi damai",
     "KDRT", "aparat", "fiktif", "modus",
     "pupuk ilegal", "rokok ilegal",
-    "koperasi", "kdkmp", "kopdes", "kmp",
+    "kdmp", "kdkmp", "kopdes",
     "bbm", "spbu"
 ]
 
-# v5.79: Daftar Kata Kunci PRIORITAS (Optimized to 55)
+# v5.80: Daftar Kata Kunci PRIORITAS (Optimized to 54)
 PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
     "mbg", "makan bergizi gratis", "mbg keracunan", "kasus mbg", "sppg", "keracunan",
@@ -184,21 +185,20 @@ PRIORITY_KATA_KUNCI = [
     # Jembatan
     "jembatan", "proyek jembatan",
     # TNI & Aparat (Expanded)
-    "oknum TNI", "oknum aparat", "TNI bermasalah", "TNI viral",
+    "TNI", "oknum TNI", "oknum aparat", "TNI bermasalah", "TNI viral",
     "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
     "keluarga TNI", "istri TNI", "anak TNI", "persit", "personel TNI",
     "wanita tni", "kowad", "tentara nasional indonesia",
     # Yon TP (Batalyon Teritorial Pembangunan)
-    "batalyon", "batalyon teritorial pembangunan",
+    "yon tp", "batalyon", "batalyon teritorial pembangunan",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
     "cerai TNI", "cerai anggota", "perceraian TNI", "perceraian prajurit",
-    "gugat cerai TNI", "cerai tentara", "cerai militer",
+    "gugat cerai TNI", "cerai tentara",
     # 2. Isu LGBT
     "LGBT TNI", "LGBT tentara", "LGBT militer", "gay TNI", "gay tentara",
-    "LGBT prajurit",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "nikah mewah TNI", "pesta mewah TNI",
+    "pernikahan mewah TNI", "nikah mewah TNI",
     "resepsi mewah tentara", "pernikahan mewah prajurit", "pesta pernikahan TNI",
     # 4. Medsos Keluarga
     "medsos TNI", "medsos istri TNI", "medsos keluarga TNI",

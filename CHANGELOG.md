@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.80] — 2026-04-27
+### Penyesuaian Keyword Wajib
+- Memasukkan kembali kata kunci wajib sesuai instruksi: **"sampah"**, **"aksi damai"**, **"yon tp"**, dan **"TNI"**.
+- Menyeimbangkan total kata kunci tetap di **75** dengan menghapus varian yang sangat redundan.
+- **Reguler (21)**: +sampah, +aksi damai, -kmp.
+- **Prioritas (54)**: +TNI, +yon tp, -cerai militer, -LGBT prajurit, -pesta mewah TNI.
+
+---
+
 ## [v5.79] — 2026-04-27
 ### Optimalisasi Kata Kunci (75 Sniper Mode)
 - Melakukan perampingan kata kunci dari 84 menjadi **tepat 75 kata kunci** untuk efisiensi perayapan.
