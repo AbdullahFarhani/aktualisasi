@@ -4,6 +4,14 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.83] — 2026-04-27
+### Priority Sorting & Genius Re-Classification
+- **Priority Sorting**: Memastikan isu prioritas (TNI, MBG, Yon TP, LGBT, dll) diproses dan dikirim ke Telegram **sebelum** sistem mulai mencari isu reguler.
+- **Genius Re-Classification**: Jika berita di siklus reguler (misal keyword "aparat") ternyata menyinggung isu prioritas, sistem otomatis menaikkan statusnya ke Prioritas 1 agar dikirim lebih dulu.
+- Menjamin isu-isu yang menjadi atensi pimpinan (Panglima/Kasad) selalu menjadi laporan pembuka di setiap siklus.
+
+---
+
 ## [v5.82] — 2026-04-27
 ### Penyesuaian User: kdmp & TNI cerai
 - Memasukkan kembali **"kdmp"** ke daftar Reguler.

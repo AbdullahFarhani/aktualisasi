@@ -254,30 +254,30 @@ def producer_crawling():
                     for artikel in artikel_belum_diproses:
                         mark_as_processed(artikel.get('url'))
                         if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
-                            # Tag Priority: 1 (High Priority)
+                            # Tag Priority: 1 (High Priority) - LANGSUNG KIRIM
                             global task_counter
                             task_counter += 1
                             antrean_berita.put((1, task_counter, (artikel, keyword, lokasi)))
-                            print(f"[!] Prioritas Ditemukan: '{artikel.get('title','')[:30]}' -> Antrean 1")
+                            print(f"[!] PRIORITAS DITEMUKAN: '{artikel.get('title','')[:30]}' -> Antrean 1 (Urutan Utama)")
                     
-                    # Jeda antar query agar tidak diciduk GNews
+                    # Jeda antar query agar tidak diciduk GNews (v5.46 Stealth)
                     time.sleep(random.randint(5, 15))
             
-            # TUNGGU SEMUA BERITA PRIORITAS DIPROSES SEBELUM LANJUT KE REGULER
+            # [PENTING] TUNGGU SEMUA BERITA PRIORITAS SELESAI DIKIRIM SEBELUM LANJUT KE REGULER
             if not antrean_berita.empty():
-                print(f"\n[*] TAHAP 1 SELESAI. Menunggu seluruh {antrean_berita.qsize()} berita PRIORITAS terprofiling dan dikirim ke Telegram...")
+                print(f"\n[*] TAHAP 1 (PRIORITAS) SELESAI. Memproses {antrean_berita.qsize()} berita utama...")
                 antrean_berita.join()
-                print("[*] Seluruh Berita Prioritas telah terkirim.\n")
+                print("[*] Seluruh Berita Prioritas telah terkirim ke Telegram. Berlanjut ke isu reguler...\n")
 
-            # v5.46: TAHAP 2 - CRAWLING REGULER (Acak & Bervariasi)
-            print("[*] Memulai Siklus Reguler (Variasi Acak)...")
+            # v5.46: TAHAP 2 - CRAWLING REGULER (DIPROSES AKHIR)
+            print("[*] Memulai Siklus Reguler (Sampah, Narkoba, KDRT, dll)...")
             kw_random = list(KATA_KUNCI)
             loc_random = list(KABKOTA_JATIM)
             random.shuffle(kw_random)
             random.shuffle(loc_random)
             
             for keyword in kw_random:
-                # Lewati jika sudah ada di prioritas agar tidak double-hit di siklus yang sama
+                # Lewati jika sudah ada di prioritas agar tidak double-hit
                 if keyword.lower() in [pk.lower() for pk in PRIORITY_KATA_KUNCI]: continue
                 
                 for lokasi in loc_random:
@@ -288,10 +288,18 @@ def producer_crawling():
                     for artikel in artikel_belum_diproses:
                         mark_as_processed(artikel.get('url'))
                         if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
-                            # Tag Normal: 5 (Medium Priority)
+                            # v5.83: Genius Re-Classification
+                            # Jika di siklus reguler ditemukan keyword prioritas, naikkan ke Antrean 1
+                            if is_actually_priority(artikel.get('title', ''), artikel.get('description', '')):
+                                p_val = 1
+                                p_label = "RE-CLASSIFIED PRIORITY"
+                            else:
+                                p_val = 5 # Tetap di antrean akhir
+                                p_label = "REGULER (DIKIRIM AKHIR)"
+                                
                             task_counter += 1
-                            antrean_berita.put((5, task_counter, (artikel, keyword, lokasi)))
-                            print(f"[*] Reguler Lolos: '{artikel.get('title','')[:30]}' -> Antrean 5")
+                            antrean_berita.put((p_val, task_counter, (artikel, keyword, lokasi)))
+                            print(f"[*] {p_label}: '{artikel.get('title','')[:30]}' -> Antrean {p_val}")
                     
                     time.sleep(random.randint(3, 8))
                         
