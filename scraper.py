@@ -1051,8 +1051,8 @@ def scrape_contact_page(domain, html_content=None):
 
 def decode_google_news_url_local(source_url):
     """
-    Menerjemahkan URL Google News secara lokal (Offline) dengan membedah data biner base64.
-    Berdasarkan logika riset huksley (Zero Request).
+    v5.85: Instant Sniper Decoder (Offline/Zero-Request)
+    Membongkar enkripsi Google News secara matematis tanpa mengirim traffic ke Google.
     """
     import base64
     from urllib.parse import urlparse
@@ -1060,24 +1060,38 @@ def decode_google_news_url_local(source_url):
     try:
         url = urlparse(source_url)
         path = url.path.split("/")
+        # Cek apakah ini URL Google News yang valid
         if url.hostname == "news.google.com" and len(path) > 1 and path[-2] in ["articles", "read"]:
             base64_str = path[-1]
-            # Tambahkan padding jika perlu
+            # 1. Normalisasi Base64 (Padding & URL-Safe)
             padding = '=' * (4 - len(base64_str) % 4)
-            decoded_bytes = base64.urlsafe_b64decode(base64_str + padding)
+            try:
+                decoded_bytes = base64.urlsafe_b64decode(base64_str + padding)
+            except:
+                return None
             
-            # Cari pola URL di dalam data biner
+            # 2. Sniper Decoding Logic (Binary Stream Analysis)
+            # Google menyembunyikan URL di antara biner 0x01, 0x08, dll.
+            # Kita cari pola http/https secara biner.
             decoded_str = decoded_bytes.decode('latin1', errors='ignore')
             
-            # v5.41: Heuristik pencarian URL yang lebih agresif (mencari http/https)
-            matches = re.findall(r'https?://[^\s\x00-\x1f\x7f-\xff<>"]+', decoded_str)
+            # Cari semua pola URL yang mungkin terselip
+            # Pola ini mencakup karakter biner yang sering menempel di awal URL Google
+            matches = re.findall(r'https?://[^\s\x00-\x08\x0b-\x1f\x7f-\xff<>"]+', decoded_str)
+            
             for potential_url in matches:
-                # Bersihkan dari sampah binari yang menempel di ekor
-                potential_url = potential_url.split('\\')[0].split('"')[0].split("'")[0].strip()
+                # Bersihkan karakter sampah yang sering tersisa (v5.85 Cleaning)
+                potential_url = re.split(r'[\x00-\x1f\\"\']', potential_url)[0].strip()
+                
+                # Validasi: Harus domain valid dan bukan internal Google
                 if len(potential_url) > 15 and "." in potential_url and "google.com" not in potential_url:
-                    if not any(ext in potential_url.lower() for ext in ['.css', '.js', '.jpg', '.png', '.ico', '.woff', 'font']):
+                    # Pastikan bukan file asset
+                    if not any(ext in potential_url.lower() for ext in ['.css', '.js', '.jpg', '.png', '.ico', '.woff']):
+                        # Bersihkan & dari ekor jika ada parameter tracking google
+                        if "?" in potential_url:
+                            potential_url = potential_url.split("?")[0] if "ved=" in potential_url else potential_url
                         return potential_url
-            return None
+        return None
     except:
         return None
 

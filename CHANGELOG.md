@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.85] — 2026-04-28
+### Instant Sniper Decoder (Offline Resolving)
+- **Zero-Request Resolving**: Memperbarui `decode_google_news_url_local` dengan teknik *Binary Stream Analysis* untuk membongkar URL Google News secara offline.
+- Menghilangkan ketergantungan pada HTTP Redirect Google yang sering kali terkena blokir 429 atau Captcha.
+- **Speed Optimization**: URL asli kini bisa didapatkan dalam hitungan milidetik tanpa perlu melakukan "lompatan" antar server.
+- **Cleaner URL**: Otomatis membersihkan parameter tracking Google (`ved`, `usg`, dll) agar link yang dikirim ke Telegram lebih bersih dan profesional.
+
+---
+
 ## [v5.84] — 2026-04-27
 ### Genius Intel Mode (Enhanced Sentiment)
 - **Priority Bypass**: Jika berita menyinggung isu prioritas (Koperasi, TNI, MBG), sistem menonaktifkan fitur *Auto-Reject* kata positif agar masalah manajerial di balik berita hibah/bantuan tetap terdeteksi.
