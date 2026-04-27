@@ -159,36 +159,33 @@ FORBIDDEN_KEYWORDS = [
 #     "oplosan",
 #     "sesat",
 #     "radikalisme",
-# v5.86: Reguler Ancaman Jatim (Optimized to 15)
+# v5.87: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
-    "korupsi", "pungli", "demo anarkis", "sengketa lahan", "narkoba",
-    "sampah", "aksi damai", "KDRT", "aparat", 
+    "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
+    "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi",
     "pupuk ilegal", "rokok ilegal",
-    "kdkmp", "kopdes", "kmp", "spbu"
+    "kdkmp", "kopdes", "kmp", "spbu", "bbm"
 ]
 
-# v5.86: Daftar Kata Kunci PRIORITAS (Optimized to 35)
+# v5.87: Daftar Kata Kunci PRIORITAS (Optimized to 31)
 PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
-    "makan bergizi gratis", "mbg keracunan", "sppg",
+    "makan bergizi gratis", "mbg", "keracunan mbg", "sppg",
     # Koperasi & Jembatan
-    "koperasi merah putih", "korupsi koperasi", "proyek jembatan",
+    "koperasi merah putih", "koperasi", "proyek jembatan",
     # TNI & Aparat (Sniper Mode)
     "TNI", "oknum TNI", "TNI bermasalah", "TNI viral",
     "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
-    "keluarga TNI", "istri TNI",
-    # Yon TP (Batalyon Teritorial Pembangunan)
-    "batalyon teritorial pembangunan", "yon tp",
+    "keluarga TNI", "istri TNI", "batalyon",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "cerai TNI", "TNI cerai", "perceraian TNI", "gugat cerai TNI",
+    "TNI cerai", "perceraian TNI", "TNI gugat cerai",
     # 2. Isu LGBT
-    "LGBT TNI", "LGBT tentara", "gay TNI",
+    "TNI LGBT", "tentara LGBT", "TNI gay",
     # 3. Pernikahan Mewah
     "pernikahan mewah TNI", "resepsi mewah tentara", "pesta pernikahan TNI",
     # 4. Medsos Keluarga
-    "medsos TNI", "medsos istri TNI", "medsos keluarga TNI",
-    "viral istri TNI", "viral keluarga TNI", "flexing TNI", "pamer TNI",
+    "viral istri TNI", "viral keluarga TNI", "TNI flexing", "TNI pamer"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota

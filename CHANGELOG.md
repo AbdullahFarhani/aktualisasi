@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.87] — 2026-04-28
+### Syntax Fix & Sniper 50 Final
+- **Syntax Repair**: Memperbaiki error tanda koma pada daftar kata kunci yang berpotensi menyebabkan program *crash*.
+- **Final Optimization**: Mengunci jumlah kata kunci di angka **tepat 50** (19 Reguler + 31 Prioritas) untuk mengejar target satu siklus 6 jam.
+- Menghapus redundansi: *penyuapan* (korupsi), *narkotika* (narkoba), dan *unjuk rasa* (demo).
+- Penyederhanaan kategori Medsos dan Cerai sesuai arahan terbaru.
+
+---
+
 ## [v5.86] — 2026-04-28
 ### Sniper 50 — 6-Hour Cycle Optimization
 - **Optimalisasi Kata Kunci**: Mengurangi total kata kunci dari 75 menjadi **tepat 50 kata kunci** untuk mengejar target penyelesaian 1 siklus dalam 6 jam.
