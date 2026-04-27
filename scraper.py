@@ -542,32 +542,16 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
             for s in rsoup(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'ins']): s.decompose()
             
             raw_text = rsoup.get_text(" ", strip=True)
-            # v5.73: Anchor Slicing Multi-Keyword (Diperlebar dari 2500 -> 5000, keyword diperkaya)
-            anchor_match = re.search(
-                r'(.{0,500})(susunan redaksi|pimpinan umum|pimpinan redaksi|dewan redaksi|penasihat'
-                r'|redaksi radar bangsa|penerbit|kontak kami|about us|tentang kami|alamat redaksi'
-                r'|hubungi kami|struktur dalam media|tentang tagar|kabar surabaya|box redaksi|bok redaksi'
-                r'|susunan pengurus|tim redaksi|jajaran redaksi|informasi redaksi|susunan manajemen'
-                r'|profil redaksi|pemimpin umum|penanggung jawab|dewan pendiri|dewan pembina'
-                r'|alamat redaksi|meet us|meet the team|boks redaksi|media cyber'
-                r'|kompas cyber media|akta pendirian|pt\s+\w+\s+(intermedia|cyber|media|gruop|pers)'
-                r'|email\s*:|telp|telepon|whatsapp|wa\s*:)(.{0,5000})',
-                raw_text, re.I
-            )
             
-            if anchor_match:
-                fragmen = (anchor_match.group(1) + anchor_match.group(2) + anchor_match.group(3)).strip()
-                if len(fragmen) > 100:
-                    hasil_gabungan.append(fragmen)
-                    if len(hasil_gabungan) >= 2: break  # Cukup 2 sumber informasi
-            else:
-                # v5.73: Full-Text Fallback — jika tidak ada keyword match, ambil seluruh teks bersih
-                # Ini berguna untuk halaman redaksi dengan format non-standar
-                if len(raw_text) > 200 and any(kw in raw_text.lower() for kw in ['redaksi', 'kontak', 'alamat', 'telp', 'email', 'pemimpin', 'reporter', 'wartawan', 'editor', 'penanggung jawab']):
-                    hasil_gabungan.append(raw_text[:5000])
-                    if len(hasil_gabungan) >= 2: break
+            # v5.77: FULL CLEAN TEXT — Kirim seluruh teks bersih tanpa potongan
+            # Setelah decompose(), teks biasanya hanya 3.000-10.000 karakter (jauh di bawah limit token Groq)
+            # Tidak perlu anchor slicing yang berisiko memotong data kontak penting
+            if len(raw_text) > 150:
+                print(f"[+] Profil media ditemukan ({len(raw_text)} karakter bersih): {target_url[:50]}...")
+                hasil_gabungan.append(raw_text)
+                if len(hasil_gabungan) >= 2: break  # Cukup 2 sumber informasi
     
-    # v5.75: Cross-Domain Fallback untuk Tribun, iNews & Kompas TV (diperluas)
+    # v5.77: Cross-Domain Fallback (Full Clean Text)
     if not hasil_gabungan:
         if 'tribunnews.com' in base_domain and base_domain != 'www.tribunnews.com':
             main_redaksi = "https://www.tribunnews.com/about/"
@@ -575,15 +559,16 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
             html_main = resilient_download(main_redaksi, timeout=10, max_retries=1, target="redaksi")
             if html_main:
                 msoup = BeautifulSoup(html_main, 'html.parser')
-                hasil_gabungan.append(msoup.get_text(" ", strip=True)[:5000])
+                for s in msoup(['script', 'style', 'nav', 'iframe', 'ins']): s.decompose()
+                hasil_gabungan.append(msoup.get_text(" ", strip=True))
         elif 'inews.id' in base_domain and base_domain != 'www.inews.id':
             for fallback_url in ["https://www.inews.id/page/redaksi", "https://www.inews.id/page/kontak-kami"]:
                 print(f"[*] Cross-Domain Fallback (iNews Network): {fallback_url}")
                 html_fb = resilient_download(fallback_url, timeout=10, max_retries=1, target="redaksi")
                 if html_fb:
                     fbsoup = BeautifulSoup(html_fb, 'html.parser')
-                    for s in fbsoup(['script', 'style', 'nav']): s.decompose()
-                    hasil_gabungan.append(fbsoup.get_text(" ", strip=True)[:5000])
+                    for s in fbsoup(['script', 'style', 'nav', 'iframe', 'ins']): s.decompose()
+                    hasil_gabungan.append(fbsoup.get_text(" ", strip=True))
                     break
 
     return "\n---\n".join(hasil_gabungan) if hasil_gabungan else ""
