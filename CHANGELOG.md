@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.81] — 2026-04-27
+### Fokus Sniper "kmp" & "TNI cerai"
+- Memasukkan kata kunci spesifik **"kmp"** (Koperasi Merah Putih) dan **"TNI cerai"** sesuai arahan.
+- Menjaga total kata kunci tetap di **75** untuk performa optimal.
+- **Reguler (21)**: +kmp, -kdmp.
+- **Prioritas (54)**: +TNI cerai, -nikah mewah TNI.
+
+---
+
 ## [v5.80] — 2026-04-27
 ### Penyesuaian Keyword Wajib
 - Memasukkan kembali kata kunci wajib sesuai instruksi: **"sampah"**, **"aksi damai"**, **"yon tp"**, dan **"TNI"**.

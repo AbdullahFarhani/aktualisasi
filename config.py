@@ -165,18 +165,18 @@ FORBIDDEN_KEYWORDS = [
 #     "prostitusi"
 # ]
 
-# v5.80: Reguler Ancaman Jatim (Optimized to 21)
+# v5.81: Reguler Ancaman Jatim (Optimized to 21)
 KATA_KUNCI = [
     "korupsi", "pungli", "penyuapan", "gratifikasi",
     "demo anarkis", "bentrok warga", "sengketa lahan", "narkoba",
     "sampah", "aksi damai",
     "KDRT", "aparat", "fiktif", "modus",
     "pupuk ilegal", "rokok ilegal",
-    "kdmp", "kdkmp", "kopdes",
+    "kdkmp", "kopdes", "kmp",
     "bbm", "spbu"
 ]
 
-# v5.80: Daftar Kata Kunci PRIORITAS (Optimized to 54)
+# v5.81: Daftar Kata Kunci PRIORITAS (Optimized to 54)
 PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
     "mbg", "makan bergizi gratis", "mbg keracunan", "kasus mbg", "sppg", "keracunan",
@@ -193,13 +193,13 @@ PRIORITY_KATA_KUNCI = [
     "yon tp", "batalyon", "batalyon teritorial pembangunan",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "cerai TNI", "cerai anggota", "perceraian TNI", "perceraian prajurit",
+    "cerai TNI", "TNI cerai", "cerai anggota", "perceraian TNI", "perceraian prajurit",
     "gugat cerai TNI", "cerai tentara",
     # 2. Isu LGBT
     "LGBT TNI", "LGBT tentara", "LGBT militer", "gay TNI", "gay tentara",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "nikah mewah TNI",
-    "resepsi mewah tentara", "pernikahan mewah prajurit", "pesta pernikahan TNI",
+    "pernikahan mewah TNI", "resepsi mewah tentara",
+    "pernikahan mewah prajurit", "pesta pernikahan TNI",
     # 4. Medsos Keluarga
     "medsos TNI", "medsos istri TNI", "medsos keluarga TNI",
     "viral istri TNI", "viral keluarga TNI", "flexing TNI", "pamer TNI",
