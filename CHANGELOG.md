@@ -4,6 +4,14 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.82] — 2026-04-27
+### Penyesuaian User: kdmp & TNI cerai
+- Memasukkan kembali **"kdmp"** ke daftar Reguler.
+- Menghapus "cerai TNI" dan memprioritaskan keyword **"TNI cerai"**.
+- Total kata kunci tetap di angka **75**.
+
+---
+
 ## [v5.81] — 2026-04-27
 ### Fokus Sniper "kmp" & "TNI cerai"
 - Memasukkan kata kunci spesifik **"kmp"** (Koperasi Merah Putih) dan **"TNI cerai"** sesuai arahan.

@@ -172,7 +172,7 @@ KATA_KUNCI = [
     "sampah", "aksi damai",
     "KDRT", "aparat", "fiktif", "modus",
     "pupuk ilegal", "rokok ilegal",
-    "kdkmp", "kopdes", "kmp",
+    "kdkmp", "kopdes", "kmp", "kdmp",
     "bbm", "spbu"
 ]
 
@@ -193,7 +193,7 @@ PRIORITY_KATA_KUNCI = [
     "yon tp", "batalyon", "batalyon teritorial pembangunan",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "cerai TNI", "TNI cerai", "cerai anggota", "perceraian TNI", "perceraian prajurit",
+    "TNI cerai", "cerai anggota", "perceraian TNI", "perceraian prajurit",
     "gugat cerai TNI", "cerai tentara",
     # 2. Isu LGBT
     "LGBT TNI", "LGBT tentara", "LGBT militer", "gay TNI", "gay tentara",
