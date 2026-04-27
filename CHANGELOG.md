@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.84] — 2026-04-27
+### Genius Intel Mode (Enhanced Sentiment)
+- **Priority Bypass**: Jika berita menyinggung isu prioritas (Koperasi, TNI, MBG), sistem menonaktifkan fitur *Auto-Reject* kata positif agar masalah manajerial di balik berita hibah/bantuan tetap terdeteksi.
+- **Expansion Pola Ancaman**: Menambahkan diksi krisis manajerial seperti: *bingung, tak punya kendali, terbengkalai, mubazir, sia-sia, tak beroperasi, mangkrak*.
+- **Machine Learning Override**: Jika isu prioritas terdeteksi oleh Regex, sistem akan mengabaikan klasifikasi "Netral/Positif" dari AI (IndoRoBERTa) demi kewaspadaan intelijen yang lebih tinggi.
+- Memperbaiki kegagalan deteksi pada kasus "Hibah Truk Koperasi Tuban" yang sebelumnya dianggap berita positif.
+
+---
+
 ## [v5.83] — 2026-04-27
 ### Priority Sorting & Genius Re-Classification
 - **Priority Sorting**: Memastikan isu prioritas (TNI, MBG, Yon TP, LGBT, dll) diproses dan dikirim ke Telegram **sebelum** sistem mulai mencari isu reguler.

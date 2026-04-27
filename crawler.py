@@ -13,8 +13,8 @@ from config import GNEWS_LANGUAGE, GNEWS_COUNTRY, GNEWS_PERIOD
 # 1. Setup Rule-Based Regex (Satpam Cepat)
 # FRASA_POSITIF_REJECT: Menghalau berita noise (hiburan, olahraga, seremoni, prestasi, promosi)
 FRASA_POSITIF_REJECT = r"(sukses|berhasil|penghargaan|bebas dari|meraih|terbukti tidak|aman|damai|lancar|kondusif|bantuan|sumbangan|apresiasi|meningkat|positif|juara|bangga|prestasi|piala|liga|pertandingan|skor|atlet|turnamen|konser|musik|film|artis|hiburan|selebriti|wisata|kuliner|hotel|promosi|diskon|wisuda|hari jadi|ulang tahun|hari ulang tahun|peresmian|sholawat|shalawat|pengajian|pengukuhan|pesta|festival|pameran|bazar|fashion|kecantikan|lifestyle|gaya hidup)"
-# POLA_ANCAMAN: Fokus pada insiden, tindak pidana, konflik, kerawanan, dan krisis logistik/pangan
-POLA_ANCAMAN = r"(korup|suap|gratifikasi|pungli|ilegal|kriminal|terseret|tipu|kasus|tersangka|terdakwa|vonis|tangkap|adili|tuntut|gerebek|sita|razia|demo|unjuk rasa|rusuh|amuk|konflik|sengketa|tawur|keroyok|bacok|bunuh|tewas|narkoba|buron|ciduk|rugi|palsu|teror|makar|senjata|bom|ledak|hoaks|provokasi|geruduk|kepung|hukum|perkosa|cabul|curi|maling|ringsek|tabrak|mati|pidana|ancaman|separatis|radikal|sabotase|penculikan|penyekapan|begal|rampok|bajak|tak layak konsumsi|basi|bau|keracunan|muntah|sakit|dikembalikan|busuk|berulat|beracun)"
+# POLA_ANCAMAN: Fokus pada insiden, tindak pidana, konflik, kerawanan, krisis logistik, dan kegagalan sistem
+POLA_ANCAMAN = r"(korup|suap|gratifikasi|pungli|ilegal|kriminal|terseret|tipu|kasus|tersangka|terdakwa|vonis|tangkap|adili|tuntut|gerebek|sita|razia|demo|unjuk rasa|rusuh|amuk|konflik|sengketa|tawur|keroyok|bacok|bunuh|tewas|narkoba|buron|ciduk|rugi|palsu|teror|makar|senjata|bom|ledak|hoaks|provokasi|geruduk|kepung|hukum|perkosa|cabul|curi|maling|ringsek|tabrak|mati|pidana|ancaman|separatis|radikal|sabotase|penculikan|penyekapan|begal|rampok|bajak|tak layak konsumsi|basi|bau|keracunan|muntah|sakit|dikembalikan|busuk|berulat|beracun|bingung|tak punya kendali|tak tahu|terbengkalai|sia-sia|mubazir|tak berfungsi|rusak|mangkrak|kecewa|protes|tolak|masalah|kendala|salah sasaran|keliru|tidak tepat|tak beroperasi)"
 # FRASA_REJECT_NASIONAL: Menghalau berita nasional/internasional murni agar tidak lolos hanya karena dimuat media Jatim
 FRASA_REJECT_NASIONAL = r"(trump|biden|putin|zelensky|xi jinping|netanyahu|iran|israel|gaza|lebanon|palestina|ukraina|rusia|timur tengah|laut cina selatan|nato|pbb|hamas|hizbullah|jakarta|bandung|medan|makassar|ikn|nusantara|nasional|dunia|internasional)"
 
@@ -42,14 +42,12 @@ except Exception as e:
 
 def is_potensi_ancaman(judul, deskripsi, strict_mode=False):
     """
-    Sistem Penyaringan Hybrid: Regex Cepat ditambahkan dengan Konfirmasi AI RoBERTa
-    v5.63: strict_mode memaksa AI hanya meloloskan sentimen Negatif (2) tanpa kompromi.
+    Sistem Penyaringan Hybrid Genius (v5.84)
     """
     teks = (str(judul) + " " + str(deskripsi)).lower()
     
-    # --- LAPIS 0: UJI LOKASI WAJIB JAWA TIMUR (PRE-FILTER KETAT) ---
-    # Jika tidak ada satupun nama daerah Jatim/Kata Jatim di judul/deskripsi, buang langsung!
-    from config import KABKOTA_JATIM
+    # --- LAPIS 0: UJI LOKASI WAJIB JAWA TIMUR ---
+    from config import KABKOTA_JATIM, PRIORITY_KATA_KUNCI
     lokasi_valid = False
     if "jatim" in teks or "jawa timur" in teks:
         lokasi_valid = True
@@ -58,48 +56,55 @@ def is_potensi_ancaman(judul, deskripsi, strict_mode=False):
             if kota.lower() in teks:
                 lokasi_valid = True
                 break
+    
+    if not lokasi_valid: return False
                 
-    # --- LAPIS 0.1: REJECT NASIONAL/INTERNASIONAL (PRE-FILTER KRITIS) ---
-    # Jika judul mengandung isu dunia/nasional murni, buang (kecuali ada konteks Jatim yang sangat kuat di judul)
+    # --- LAPIS 0.1: REJECT NASIONAL/INTERNASIONAL ---
     if re.search(FRASA_REJECT_NASIONAL, teks):
-        # Kecuali ada kata kunci kota jatim spesifik, maka kita anggap itu isu luar
         return False
 
-    # --- LAPIS 1: PENGHAPUSAN PAKSA (RULE-BASED SENTIMEN POSITIF) ---
+    # --- LAPIS 1: PEMERIKSAAN PRIORITAS (GENIUS BYPASS) ---
+    # Jika berita tentang isu prioritas (TNI, Koperasi, MBG), kita JAUH lebih sensitif.
+    isu_prioritas = False
+    for pk in PRIORITY_KATA_KUNCI:
+        if pk.lower() in teks:
+            isu_prioritas = True
+            break
+
+    # --- LAPIS 2: PENGHAPUSAN PAKSA (SENTIMEN POSITIF) ---
     if re.search(FRASA_POSITIF_REJECT, teks):
-        # Jika mutlak mengandung kalimat berita positif/perayaan, langsung kubur!
-        return False
+        # Jika isu prioritas, JANGAN langsung buang (Bisa saja bantuan yang bermasalah)
+        if not isu_prioritas:
+            return False
         
-    # --- LAPIS 2: PEMERIKSAAN INSIDEN (RULE-BASED) ---
+    # --- LAPIS 3: PEMERIKSAAN INSIDEN (REGEX) ---
     indikasi_kasus = bool(re.search(POLA_ANCAMAN, teks))
     
-    # --- LAPIS 3: KONFIRMASI INFERENSI AI (MACHINE LEARNING) ---
+    # --- LAPIS 4: KONFIRMASI AI ---
     if AI_READY:
         try:
-            # Ubah teks ke tensor matematika terbatas 512 max length (standard transformer)
             inputs = tokenizer(teks, return_tensors="pt", truncation=True, max_length=512)
             with torch.no_grad():
                 outputs = indoroberta_model(**inputs)
             
-            # Ekstrak probabilitas tertinggi
             predicted_class = torch.argmax(outputs.logits, dim=-1).item()
             
-            # W11WO/Indonesian Rule: 0 = Positif, 1 = Netral, 2 = Negatif
+            # 0=Pos, 1=Net, 2=Neg
             if predicted_class == 2:
-                # 100% Validasi Mesin: ini sentimen Negatif/Ancaman.
+                return True
+                
+            # Genius Logic: Jika isu prioritas DAN ada indikasi kasus (Regex), 
+            # abaikan saja jika AI bilang "Netral" (1) atau "Positif" (0). Intelijen harus waspada.
+            if isu_prioritas and indikasi_kasus:
                 return True
                 
             if not strict_mode and indikasi_kasus and predicted_class == 1:
-                # Toleransi Cerdas: AI bilang 'Netral', tapi Regex Polisi bilang ada insiden parah. Lebih baik waspada & diloloskan.
                 return True
                 
-            return False # Kalau AI bilang Positif (0) atau Netral (tanpa insiden/di mode ketat), mutlak kita buang (False)
+            return False 
         except Exception as e:
-            # Fallback jika model tiba-tiba error inferensi
-            print(f"[-] Error Inferensi Neural Network: {e}")
             return indikasi_kasus
     else:
-        # Fallback konvensional jika library Torch/Transformers hilang
         return indikasi_kasus
 
 def search_news(keyword, location):
