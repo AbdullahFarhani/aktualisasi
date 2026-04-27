@@ -472,7 +472,31 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
     elif 'jpnn.com' in base_domain:
         potensial_links.insert(0, "https://www.jpnn.com/page/tentang-kami")
         potensial_links.insert(0, "https://www.jpnn.com/page/redaksi")
-    
+    # === v5.76: Domain Baru dari Evaluasi ===
+    # Kediri Tangguh
+    elif 'kediritangguh.co' in base_domain:
+        potensial_links.insert(0, "https://kediritangguh.co/tentang-kami/")
+    # Jurnal Jatim
+    elif 'jurnaljatim.com' in base_domain:
+        potensial_links.insert(0, "https://jurnaljatim.com/tentang-kami/")
+        potensial_links.insert(0, "https://jurnaljatim.com/redaksi/")
+    # TargetNews
+    elif 'targetnews.id' in base_domain:
+        potensial_links.insert(0, "https://targetnews.id/redaksi/")
+    # Media Kampung
+    elif 'mediakampung.com' in base_domain:
+        potensial_links.insert(0, "https://mediakampung.com/kontak-kami/")
+        potensial_links.insert(0, "https://mediakampung.com/tentang-kami/")
+        potensial_links.insert(0, "https://mediakampung.com/redaksi/")
+    # Pena Bicara
+    elif 'penabicara.com' in base_domain:
+        potensial_links.insert(0, "https://www.penabicara.com/kontak")
+        potensial_links.insert(0, "https://www.penabicara.com/redaksi")
+        potensial_links.insert(0, "https://www.penabicara.com/about-us")
+    # Okezone
+    elif 'okezone.com' in base_domain:
+        potensial_links.insert(0, "https://www.okezone.com/about-us")
+        potensial_links.insert(0, "https://www.okezone.com/redaksi")
     # Menghapus duplikat sambil mempertahankan urutan (mengutamakan hasil hardcode)
     potensial_links = list(dict.fromkeys(potensial_links))
     
