@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.79] — 2026-04-27
+### Optimalisasi Kata Kunci (75 Sniper Mode)
+- Melakukan perampingan kata kunci dari 84 menjadi **tepat 75 kata kunci** untuk efisiensi perayapan.
+- **Reguler (20)**: Menghapus keyword terlalu luas seperti "sampah" dan "aksi damai".
+- **Prioritas (55)**: Menghapus "TNI" (terlalu luas), "yon tp" (sudah ada Batalyon), serta menggabungkan varian LGBT dan Medsos yang redundan.
+- Fokus lebih tajam pada isu sensitif sesuai arahan pimpinan dengan volume query yang lebih terkendali.
+
+---
+
 ## [v5.78] — 2026-04-27
 ### Arahan Panglima via Asintel — Trending Kasad
 - Menambahkan **4 kategori keyword prioritas baru** sesuai arahan pimpinan:
