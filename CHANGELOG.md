@@ -4,6 +4,18 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.78] — 2026-04-27
+### Arahan Panglima via Asintel — Trending Kasad
+- Menambahkan **4 kategori keyword prioritas baru** sesuai arahan pimpinan:
+  1. **Rencana Cerai Anggota**: cerai TNI, perceraian TNI, perceraian prajurit, gugat cerai TNI, dll.
+  2. **Isu LGBT**: LGBT TNI, LGBT tentara, LGBT militer, gay TNI, lesbian TNI, transgender TNI, dll.
+  3. **Pernikahan Mewah**: pernikahan mewah TNI, nikah mewah TNI, pesta mewah TNI, resepsi mewah tentara, dll.
+  4. **Medsos Keluarga**: medsos TNI, medsos istri TNI, viral keluarga TNI, flexing TNI, pamer TNI, dll.
+- Menambahkan keyword **Yon TP**: yon tp, yon tugas perbantuan, yonif.
+- Total keyword prioritas naik dari 27 → 46.
+
+---
+
 ## [v5.77] — 2026-04-27
 ### Full Clean Text Profiling
 - **BREAKING**: Menghapus sistem **Anchor Slicing** (batas 5000 karakter) pada profiling halaman redaksi/kontak.

@@ -176,7 +176,7 @@ KATA_KUNCI = [
     "bbm", "spbu"
 ]
 
-# v5.75: Daftar Kata Kunci PRIORITAS (Expanded Sniper Mode)
+# v5.78: Daftar Kata Kunci PRIORITAS (Arahan Panglima via Asintel)
 PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
     "mbg", "makan bergizi gratis", "mbg keracunan", "kasus mbg", "sppg", "keracunan",
@@ -188,7 +188,23 @@ PRIORITY_KATA_KUNCI = [
     "oknum TNI", "oknum aparat", "TNI bermasalah", "TNI viral", "TNI",
     "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
     "keluarga TNI", "istri TNI", "anak TNI", "persit", "personel TNI",
-    "wanita tni", "kowad", "tentara nasional indonesia"
+    "wanita tni", "kowad", "tentara nasional indonesia",
+    # Yon TP (Yon Tugas Perbantuan)
+    "yon tp", "yon tugas perbantuan", "yonif",
+    # --- ARAHAN PANGLIMA (Trending Kasad) ---
+    # 1. Rencana Cerai Anggota
+    "cerai TNI", "cerai anggota", "perceraian TNI", "perceraian prajurit",
+    "gugat cerai TNI", "cerai tentara", "cerai militer",
+    # 2. Isu LGBT
+    "LGBT TNI", "LGBT tentara", "LGBT militer", "gay TNI", "gay tentara",
+    "lesbian TNI", "transgender TNI", "LGBT prajurit",
+    # 3. Pernikahan Mewah
+    "pernikahan mewah TNI", "nikah mewah TNI", "pesta mewah TNI",
+    "resepsi mewah tentara", "pernikahan mewah prajurit", "pesta pernikahan TNI",
+    # 4. Medsos Keluarga
+    "medsos TNI", "medsos istri TNI", "medsos keluarga TNI",
+    "viral istri TNI", "viral keluarga TNI", "sosial media TNI",
+    "konten istri TNI", "flexing TNI", "pamer TNI",
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota
