@@ -600,13 +600,18 @@ KANTOR_BERITA = ['antara', 'reuters', 'afp', 'ap', 'bloomberg', 'cnbc', 'bbc', '
 # Jaringan Media Terpercaya (Cross-Domain Mapping)
 TRUSTED_NETWORKS = {
     'malangtimes.com': ['jatimtimes.com', 'malangtimes.com'],
-    'radarkediri.jawapos.com': ['jawapos.com', 'radarkediri.jawapos.com'],
+    'radarkediri.jawapos.com': ['jawapos.com', 'radarkediri.jawapos.com', 'radarmadiun.jawapos.com'],
     'gresiksatu.com': ['gresiksatu.com', 'klikjatim.com'],
-    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunjatim.com', 'suryamalang.com', 'jatim.tribunnews.com'],
-    'rubicnews.com': ['rubicnews.com', 'promedia', 'jatimtimes.com'], # Rubic News Network
+    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunjatim.com', 'suryamalang.com', 'jatim.tribunnews.com', 'jatim-timur.tribunnews.com'],
+    'rubicnews.com': ['rubicnews.com', 'promedia', 'jatimtimes.com'],
     'surabayapagi.com': ['surabayapagi.com'],
-    'rri.co.id': ['rri.co.id'], # RRI Network
-    'jawapos.com': ['jawapos.com', 'radarmadura.jawapos.com', 'radarsolo.jawapos.com', 'radarsurabaya.jawapos.com', 'radarsemarang.jawapos.com', 'radarkediri.jawapos.com'],
+    'rri.co.id': ['rri.co.id'],
+    'jawapos.com': [
+        'jawapos.com', 'radarmadura.jawapos.com', 'radarsolo.jawapos.com', 
+        'radarsurabaya.jawapos.com', 'radarsemarang.jawapos.com', 'radarkediri.jawapos.com',
+        'radarsitubondo.jawapos.com', 'radarbanyuwangi.jawapos.com', 'radartulungagung.jawapos.com',
+        'radarjombang.jawapos.com', 'radarbojonegoro.jawapos.com', 'radarmadiun.jawapos.com'
+    ],
     'serambinews.com': ['serambinews.com', 'bangkapos.com'],
     'pojokbogor.com': ['pojokbogor.com', 'pojoksatu.id'],
 }
@@ -861,14 +866,14 @@ def is_menu_noise(teks, is_profile_page=False):
 
 def sniff_contact_and_editorial_board(soup, is_profile_page=False):
     """
-    v5.39 Helper: Pemindaian cerdas untuk kontak, alamat, dan jajaran redaksi.
+    v5.88 Helper: Pemindaian cerdas untuk kontak, alamat, dan jajaran redaksi.
     Menggabungkan Table Sniffing, List Sniffing, dan Element Scanning.
     """
     captured_text = ""
     # v5.38: Prioritas pada Table (Susunan Redaksi) dan Address
     area_penting = soup.find_all(['header', 'footer', 'main', 'article', 'div', 'aside', 'table', 'section', 'ul', 'ol', 'dl'])
     
-    # 1. v5.39: CLOUDFLARE BYPASS (Lakukan di awal agar teks soup sudah bersih)
+    # 1. v5.39: CLOUDFLARE BYPASS
     for cf_node in soup.find_all(attrs={"data-cfemail": True}):
         try:
             cf_hex = cf_node['data-cfemail']
@@ -879,23 +884,20 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
 
     # 2. BLOK SNIFFING (Tabel, List, & Content Containers)
     for area in area_penting:
-        # v5.40: Super-Keyword Check (Prioritas Utama)
-        # Jika mengandung "Susunan Redaksi" secara spesifik, ambil bloknya meskipun berupa div
         area_raw = area.get_text(" ", strip=True)
-        is_super_block = any(skw in area_raw.lower() for skw in ['susunan redaksi', 'dewan redaksi', 'struktur organisasi', 'redaksi kami', 'boks redaksi', 'jajaran redaksi'])
+        # v5.88: Pencarian keyword kontak lebih agresif
+        is_contact_block = any(skw in area_raw.lower() for skw in ['susunan redaksi', 'dewan redaksi', 'redaksi kami', 'boks redaksi', 'jajaran redaksi', 'hubungi kami', 'contact us', 'telepon', 'whatsapp', 'wa:', 'telp:'])
         
-        if area.name in ['table', 'ul', 'ol', 'dl'] or (is_super_block and area.name in ['div', 'section']):
+        if area.name in ['table', 'ul', 'ol', 'dl'] or (is_contact_block and area.name in ['div', 'section', 'footer']):
             full_area_text = area.get_text(" ", strip=True)
-            # v5.39-v5.40: Keyword jajaran redaksi diperluas
-            board_kws = ['redaksi', 'pimpinan', 'dewan', 'pengurus', 'editor', 'penulis', 'komisaris', 'direktur', 'pemred', 'manajer', 'redaktur', 'kabiro']
-            if is_super_block or any(kw in full_area_text.lower() for kw in board_kws):
+            board_kws = ['redaksi', 'pimpinan', 'dewan', 'pengurus', 'editor', 'penulis', 'direktur', 'pemred', 'manajer', 'redaktur', 'kabiro', 'telepon', 'whatsapp', 'wa:', 'telp:']
+            if is_contact_block or any(kw in full_area_text.lower() for kw in board_kws):
                 teks_box = bersihkan_konten_kontak(full_area_text)
-                # v5.40: Batas panjang ditingkatkan untuk tampung daftar kontributor daerah yang sangat panjang
                 if 10 < len(teks_box) < 8000:
-                    prefix = "[BOX REDAKSI/MANAJEMEN]" if (is_super_block or any(kw in teks_box.lower() for kw in board_kws)) else "[INFO KONTAK BLOK]"
+                    prefix = "[BOX REDAKSI/KONTAK]"
                     if teks_box not in captured_text:
                         captured_text += f"{prefix}: {teks_box}\n"
-                if is_super_block: continue # Jangan scan child jika sudah kena super-block
+                if is_contact_block: continue 
                 if area.name in ['table', 'ul', 'ol', 'dl']: continue 
 
         # 3. ELEMENT SCANNING (P, LI, TD, dsb)
@@ -903,18 +905,13 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
             if element.name == 'div' and element.find(['p', 'div', 'span']):
                 continue
                 
-            # TR Context (Row Context)
-            if element.name == 'tr':
-                txt_row = element.get_text(" : ", strip=True)
-                if any(kw in txt_row.lower() for kw in KATA_KUNCI_KONTEN):
-                     teks_row_bersih = bersihkan_konten_kontak(txt_row)
-                     if 5 < len(teks_row_bersih) < 500 and teks_row_bersih not in captured_text:
-                         captured_text += teks_row_bersih + "\n"
-                continue
-                
             teks_el = element.get_text(" ", strip=True)
+            # v5.88: Deteksi langsung link WA me di dalam elemen
+            wa_in_el = element.find('a', href=re.compile(r'wa\.me|whatsapp', re.I))
+            if wa_in_el:
+                teks_el += f" (Link WA: {wa_in_el['href']})"
+
             if 8 <= len(teks_el) < 1500 and any(kw in teks_el.lower() for kw in KATA_KUNCI_KONTEN):
-                # v5.30 Anti-Noise: Buang teks navigasi menu
                 if is_menu_noise(teks_el, is_profile_page=is_profile_page):
                     continue
                 teks_bersih = bersihkan_konten_kontak(teks_el)
@@ -939,16 +936,39 @@ def scrape_contact_page(domain, html_content=None):
             if not html: return ""
             soup = BeautifulSoup(html, 'html.parser')
         
-        # v5.32: Ekstraksi Absolut Heuristik Regex (Genius Mode)
+        # v5.88: GIGA-AGGRESSIVE CONTACT SCANNER (Heuristic Layer)
         all_raw_text = soup.get_text(" ", strip=True)
+        # 1. Email Scanner
         emails = re.findall(r'[a-zA-Z0-9._%+-]+(?:@|\(at\)|\[at\])[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', all_raw_text, re.I)
-        phones = re.findall(r'\b(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}(?:\d{1,4})?\b', all_raw_text)
-        phones = [p for p in set(phones) if len(re.sub(r'\D', '', p)) >= 9]
         
-        if emails or phones:
-            ext_contact = "\n[INFORMASI KONTAK (HEURISTIK SCANNER)]:\n"
+        # 2. Phone & WhatsApp Scanner (Optimized for Indonesian Formats)
+        # Mendukung: 0812..., +62 812..., (021) ..., 031-..., WA: 08...
+        pola_telp = [
+            r'(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}(?:\d{1,4})?', # Standard
+            r'08[1-9]\d{1,2}[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}', # Mobile 08...
+            r'\(?0\d{2,3}\)?[\s\-\.]?\d{5,8}' # Landline (021) 123456
+        ]
+        phones = []
+        for p in pola_telp:
+            hits = re.findall(p, all_raw_text)
+            phones.extend(hits)
+        
+        # 3. WA.ME Link Scanner (Direct WA)
+        wa_links = []
+        for a in soup.find_all('a', href=True):
+            h = a['href'].lower()
+            if 'wa.me/' in h or 'whatsapp.com/send' in h:
+                wa_num = re.sub(r'\D', '', h.split('/')[-1])
+                if len(wa_num) >= 10:
+                    wa_links.append(f"WhatsApp: +{wa_num}")
+        
+        phones = [p.strip() for p in set(phones) if len(re.sub(r'\D', '', p)) >= 9]
+        
+        if emails or phones or wa_links:
+            ext_contact = "\n[DATA KONTAK AKTUAL (HEURISTIK)]:\n"
             if emails: ext_contact += "Email: " + " | ".join(list(set(emails))) + "\n"
-            if phones: ext_contact += "Telepon/WA: " + " | ".join(phones) + "\n"
+            if phones: ext_contact += "Telepon: " + " | ".join(phones) + "\n"
+            if wa_links: ext_contact += "Link WA: " + " | ".join(list(set(wa_links))) + "\n"
             contact_text += ext_contact + "\n"
         
         # 1. v5.39: Sniff dari halaman utama/artikel
@@ -979,8 +999,8 @@ def scrape_contact_page(domain, html_content=None):
                     else: full_url = urljoin(domain, "/" + href_asli)
                     
                     parsed_target = urlparse(full_url).netloc.lower()
-                    # Filter Social Media
-                    if any(sm in parsed_target for sm in ['facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'wa.me', 'whatsapp.', 'google.com', 'apple.com', 'play.google']):
+                    # Filter Social Media (Kecuali WhatsApp untuk kontak)
+                    if any(sm in parsed_target for sm in ['facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'google.com', 'apple.com', 'play.google']):
                         continue
                         
                     if any(p in href_asli.lower() for p in PRIORITY_PATTERNS):

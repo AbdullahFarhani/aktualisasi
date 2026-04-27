@@ -159,7 +159,7 @@ FORBIDDEN_KEYWORDS = [
 #     "oplosan",
 #     "sesat",
 #     "radikalisme",
-# v5.87: Reguler Ancaman Jatim (Optimized to 19)
+# v5.88: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
     "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
     "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi",

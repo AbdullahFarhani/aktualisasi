@@ -4,6 +4,17 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.88] — 2026-04-28
+### Intelligence Profiling & Contact Genius
+- **Enhanced Contact Scraping**: Meningkatkan agresivitas deteksi nomor telepon/WA dengan regex baru yang mencakup format lokal (08..., (021)...) dan capture otomatis link `wa.me`.
+- **Smart Footer/Header Sniffing**: Membedah blok footer dan header secara spesifik untuk mencari informasi profiling laman (Nama Laman, Alamat, Redaksi, Kontak).
+- **AI Profiling Prompt v5.88**: Restrukturisasi prompt AI untuk memaksa ekstraksi data media secara terstruktur (Nama Laman, Alamat, Redaksi, Kontak) dan memisahkannya dari aktor berita.
+- **Threat Pattern Expansion**: Memperluas `POLA_ANCAMAN` mencakup isu cerai, lgbt, flexing, dan pamer mewah sesuai arahan pimpinan.
+- **Telegram Template v5.88**: Memperbarui format notifikasi untuk menampilkan profiling media secara lengkap dan rapi.
+- **Trusted Network Expansion**: Menambahkan jaringan media lokal Jatim (Radar & Tribun Jatim Timur) untuk akurasi profiling yang lebih tinggi.
+
+---
+
 ## [v5.87] — 2026-04-28
 ### Syntax Fix & Sniper 50 Final
 - **Syntax Repair**: Memperbaiki error tanda koma pada daftar kata kunci yang berpotensi menyebabkan program *crash*.
