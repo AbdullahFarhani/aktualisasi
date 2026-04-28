@@ -1071,8 +1071,9 @@ def scrape_contact_page(domain, html_content=None):
 
 def decode_google_news_url_local(source_url):
     """
-    v5.85: Instant Sniper Decoder (Offline/Zero-Request)
-    Membongkar enkripsi Google News secara matematis tanpa mengirim traffic ke Google.
+    v5.90: GENIUS SNIPER DECODER (Zero-Request)
+    Membongkar enkripsi Google News secara matematis via Binary Stream Analysis.
+    Sangat cerdas: Tanpa menyentuh server Google (Anti-Blokir Absolut).
     """
     import base64
     from urllib.parse import urlparse
@@ -1080,40 +1081,69 @@ def decode_google_news_url_local(source_url):
     try:
         url = urlparse(source_url)
         path = url.path.split("/")
-        # Cek apakah ini URL Google News yang valid
-        if url.hostname == "news.google.com" and len(path) > 1 and path[-2] in ["articles", "read"]:
+        if (url.hostname == "news.google.com" or "google" in url.hostname) and len(path) > 1:
             base64_str = path[-1]
-            # 1. Normalisasi Base64 (Padding & URL-Safe)
+            # v5.90: Smart Padding & Multi-Format Support
+            base64_str = base64_str.replace('-', '+').replace('_', '/')
             padding = '=' * (4 - len(base64_str) % 4)
             try:
-                decoded_bytes = base64.urlsafe_b64decode(base64_str + padding)
+                decoded_bytes = base64.b64decode(base64_str + padding)
             except:
                 return None
             
-            # 2. Sniper Decoding Logic (Binary Stream Analysis)
-            # Google menyembunyikan URL di antara biner 0x01, 0x08, dll.
-            # Kita cari pola http/https secara biner.
             decoded_str = decoded_bytes.decode('latin1', errors='ignore')
             
-            # Cari semua pola URL yang mungkin terselip
-            # Pola ini mencakup karakter biner yang sering menempel di awal URL Google
-            matches = re.findall(r'https?://[^\s\x00-\x08\x0b-\x1f\x7f-\xff<>"]+', decoded_str)
+            # Pola Sniper: Google menyisipkan URL di antara biner 0x01, 0x08, dll.
+            # Kita cari pola http/https dengan filter karakter non-printable yang lebih ketat.
+            matches = re.findall(r'https?://[^\s\x00-\x1f\x7f-\xff<>"]+', decoded_str)
             
+            valid_urls = []
             for potential_url in matches:
-                # Bersihkan karakter sampah yang sering tersisa (v5.85 Cleaning)
-                potential_url = re.split(r'[\x00-\x1f\\"\']', potential_url)[0].strip()
+                # v5.90: Deep Clean (Menghilangkan sisa-sisa biner Google)
+                potential_url = potential_url.split('\x01')[0].split('\x08')[0].split('\x12')[0].strip()
+                potential_url = re.split(r'[\\"\']', potential_url)[0].strip()
                 
-                # Validasi: Harus domain valid dan bukan internal Google
-                if len(potential_url) > 15 and "." in potential_url and "google.com" not in potential_url:
-                    # Pastikan bukan file asset
-                    if not any(ext in potential_url.lower() for ext in ['.css', '.js', '.jpg', '.png', '.ico', '.woff']):
-                        # Bersihkan & dari ekor jika ada parameter tracking google
+                if len(potential_url) > 12 and "." in potential_url and "google.com" not in potential_url:
+                    if not any(ext in potential_url.lower() for ext in ['.css', '.js', '.jpg', '.png', '.ico']):
+                        # Bersihkan tracking parameters
                         if "?" in potential_url:
-                            potential_url = potential_url.split("?")[0] if "ved=" in potential_url else potential_url
-                        return potential_url
+                            if any(p in potential_url for p in ["ved=", "usg=", "amp="]):
+                                potential_url = potential_url.split("?")[0]
+                        valid_urls.append(potential_url)
+            
+            if valid_urls:
+                # Utamakan URL terpanjang (biasanya URL asli, bukan shortlink)
+                return max(valid_urls, key=len)
         return None
     except:
         return None
+
+def genius_search_fallback(title, publisher=""):
+    """
+    v5.90: GENIUS SEARCH FALLBACK (Sniper Layer 4)
+    Jika Google News memblokir seluruh akses, cari judul artikel di DuckDuckGo 
+    untuk mendapatkan link aslinya secara instan.
+    """
+    import urllib.parse
+    search_query = f'"{title}" {publisher}'.strip()
+    search_url = f"https://duckduckgo.com/html/?q={urllib.parse.quote(search_query)}"
+    
+    print(f"[*] Sniper Lapis 4: Menjalankan Search Fallback untuk '{title[:40]}...'")
+    try:
+        # Gunakan session khusus agar terlihat seperti browser beneran
+        resp = requests.get(search_url, headers=get_human_headers(), timeout=10)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            # Ambil hasil pencarian pertama
+            results = soup.find_all('a', class_='result__a', href=True)
+            for res in results:
+                found_url = res['href']
+                if "duckduckgo.com" not in found_url and "google.com" not in found_url:
+                    print(f"[+] Sniper Lapis 4 BERHASIL (DuckDuckGo): {found_url[:50]}...")
+                    return found_url
+    except Exception as e:
+        print(f"[-] Search Fallback Gagal: {e}")
+    return None
 
 def extract_link_from_meta_tags(html):
     """
@@ -1429,8 +1459,12 @@ def search_original_url_fallback(title, publisher_name, publisher_url=""):
     return None
 
 def extract_article(artikel_obj):
-    """Mengekstrak teks berita, metadata penulis, dan profil media."""
+    """
+    v5.90: GENIUS SNIPER EXTRACTOR
+    Mengekstrak teks berita, metadata, dan profil media dengan sistem resolusi URL 5-Lapis.
+    """
     import time
+    import random
     
     gnews_url = artikel_obj.get('url', '')
     gnews_title = artikel_obj.get('title', '')
@@ -1441,182 +1475,131 @@ def extract_article(artikel_obj):
     gnews_publisher_name = pub_info.get('title', '')
     gnews_publisher_url = pub_info.get('href', gnews_url)
     
-    print(f"[*] Memproses artikel: {gnews_title[:50]}...")
+    print(f"[*] Sniper v5.90: Memproses '{gnews_title[:40]}...'")
+    
     try:
         # v4.21 URL CACHE CHECK
         if gnews_url in URL_CACHE:
-            print(f"[+] URL ditemukan di Cache: {URL_CACHE[gnews_url][:50]}...")
             real_url = URL_CACHE[gnews_url]
+            print(f"[+] URL Sniper: Cache Match -> {real_url[:50]}...")
         else:
-            # BYPASS GOOGLE NEWS REDIRECT
-            # Kita gunakan metode berlapis untuk menerjemahkan base64 payload ke URL Asli!
             real_url = gnews_url
-        
-        # LAPIS 0: Local Offline Decoder (Zero Request / Anti-Blokir)
-        local_decoded = decode_google_news_url_local(gnews_url)
-        if local_decoded:
-            real_url = local_decoded
-            print(f"[+] Berhasil merenggut URL via Local Decoder (Zero Request): {real_url[:50]}...")
             
-        # LAPIS 0.5: Direct Safe Redirect (Resilient Session) - v5.69
-        # Berjalan perlahan (karena ada jitter di worker) untuk menghindari 429 Too Many Requests
-        if "news.google.com" in real_url:
-            try:
-                print("[*] Mencoba Lapis 0.5: Direct Safe Redirect...")
-                # Gunakan timeout sedikit panjang dan tidak verify SSL agar lolos blokir
-                _safe_res = SEARCH_SESSION.head(real_url, headers=get_human_headers(mode="mobile"), timeout=15, allow_redirects=True, verify=False)
-                if "google.com" not in _safe_res.url:
-                    real_url = _safe_res.url
-                    print(f"[+] Lapis 0.5 Berhasil (HTTP Redirect): {real_url[:60]}...")
-            except Exception as e:
-                print(f"[-] Lapis 0.5 Gagal/Diblokir (429/SSL): {str(e)[:40]}")
+            # --- STRATEGI RESOLUSI URL 5-LAPIS (GENIUS Sniper) ---
             
-        # LAPIS 1: googlenewsdecoder (Library Standar - Fallback)
-        if "news.google.com" in real_url:
-            try:
-                from googlenewsdecoder import gnewsdecoder
-                # Gunakan Smart Jittering (Jeda acak 2-4 detik)
-                time.sleep(random.uniform(2.0, 4.0))
-                decoded_result = gnewsdecoder(gnews_url, interval=2)
-                if decoded_result.get('status') and decoded_result.get('decoded_url'):
-                    real_url = decoded_result.get('decoded_url')
-                    print(f"[+] Lapis 1 Berhasil: {real_url[:60]}...")
-            except:
-                pass
+            # LAPIS 0: Local Offline Binary Decoder (Anti-Blokir Absolut)
+            decoded = decode_google_news_url_local(gnews_url)
+            if decoded:
+                real_url = decoded
+                print(f"[+] Sniper Lapis 0 (Binary): SUCCESS -> {real_url[:50]}...")
             
-        # LAPIS 1.5: Decoder V4 dari Repositori Lokal (Batch Execute Logic)
-        if "news.google.com" in real_url:
-            try:
-                from googlenewsdecoder.decoderv4 import decode_google_news_url as v4_decode
-                # Smart Jittering (3-5 detik)
-                time.sleep(random.uniform(3.0, 5.0))
-                # v5.21: Removed invalid 'session' arg causing crash
-                v4_results = v4_decode([gnews_url])
-                if v4_results and v4_results[0].get('status'):
-                    real_url = v4_results[0].get('url')
-                    print(f"[+] Berhasil merenggut URL via Decoder V4 (Lokal): {real_url[:50]}...")
-            except Exception as e:
-                print(f"[!] Gagal Decoder V4: {str(e)}")
+            # LAPIS 1: Resilient Head Redirect
+            if "news.google.com" in real_url:
+                try:
+                    time.sleep(random.uniform(1, 3))
+                    res = SEARCH_SESSION.head(real_url, headers=get_human_headers(mode="mobile"), timeout=12, allow_redirects=True, verify=False)
+                    if "google.com" not in res.url:
+                        real_url = res.url
+                        print(f"[+] Sniper Lapis 1 (Head): SUCCESS -> {real_url[:50]}...")
+                except: pass
             
-        # LAPIS 2.5: Deep Body Extraction (Membaca HTML Google News untuk mencari link asli)
-        # LAPIS 2.5: Deep Body Sniffing (JS/Meta/JSON-LD)
-        if "news.google.com" in real_url:
-            try:
-                with requests.Session() as s:
-                    # Gunakan verify=False jika ISP membajak SSL
-                    res_body = s.get(real_url, headers=HEADERS, timeout=12, verify=False)
+            # LAPIS 2: Deep DOM Sniffer (JS/Meta/JSON-LD)
+            if "news.google.com" in real_url:
+                try:
+                    res_body = SEARCH_SESSION.get(real_url, headers=get_human_headers(mode="desktop"), timeout=15, verify=False)
                     if res_body.status_code == 200:
+                        # Sniper Patterns
                         patterns = [
                             r'url=["\']?(https?://[^"\' >]+)', # Meta Refresh
                             r'window\.location\.replace\(["\'](https?://[^"\' >]+)', # JS Redirect
                             r'"url":\s*["\'](https?://[^"\' >]+)', # JSON-LD
-                            r'data-url=["\'](https?://[^"\' >]+)', # Data-URL Attribute
-                            r'href=["\'](https?://[^"\' >]+)', # standard tag
-                            r'\["(https?://[^"\' >]+)"\]' # JS Array pattern
+                            r'data-url=["\'](https?://[^"\' >]+)', # Data-Attribute
+                            r'\["(https?://[^"\' >]+)"\]' # JS Array
                         ]
-                        for pattern in patterns:
-                            matches = re.finditer(pattern, res_body.text, re.I)
-                            for m in matches:
-                                found_url = m.group(1).split('\\')[0].split('"')[0].split("'")[0].split("&amp;")[0].strip()
-                                
-                                # VALIDASI KETAT: Harus ada kemiripan domain dengan publisher atau trusted network (v5.72 Block Bing Leak)
-                                if all(x not in found_url for x in ["google", "gstatic", "facebook", "twitter", "analytics", "doubleclick", "adservice", "bing", "yahoo"]):
-                                    # v5.44: Greedy Trust - Jika mengandung domain hint atau jaringan Jatim, ambil!
-                                    if any(t in found_url.lower() for t in trusted_list) or any(n in found_url.lower() for n in ["radar", "tribun", "jawapos", "kompas", "detik", "suryamalang", "surya.co.id"]):
-                                        real_url = found_url
-                                        print(f"[+] Deep Sniffing Berhasil (Lapis 2.5): {real_url[:50]}...")
-                                        break
-                            if "google.com" not in real_url: break
-            except: pass
-
-        # LAPIS 2: Pukul paksa dengan requests bypass (Follow Redirect)
-        if "news.google.com" in real_url:
-            try:
-                # v4.19: Mobile-First Sniffing & DOM Link Miner
-                mobile_headers = get_human_headers(mode="mobile")
-                res_prime = requests.get(real_url, headers=mobile_headers, timeout=10, allow_redirects=True)
-                
-                if "google.com" not in res_prime.url and "bing.com" not in res_prime.url:
-                    real_url = res_prime.url
-                else:
-                    # 1. JSON-LD & SCHEMA MINER (Lapis 2.8 - v4.20)
-                    json_url = extract_link_from_json_ld(body_text, domain_hint)
-                    if json_url:
-                        real_url = json_url
-                        print(f"[+] JSON-LD Miner Berhasil (v4.20): {real_url[:50]}...")
-                    
-                    # 2. DOM LINK MINER (Lapis 2.7): Cari URL asli di dalam tumpukan kode Google
-                    if "google.com" in real_url and domain_hint:
-                        miner_match = re.search(r'https?://(?:www\.)?'+re.escape(domain_hint)+r'/[^\s"\'<>]+', body_text)
-                        if miner_match:
-                            found_url = miner_match.group(0).split('"')[0].split("'")[0].split('\\')[0].strip()
-                            if len(found_url) > 25:
-                                real_url = found_url
-                                print(f"[+] DOM Link Miner Berhasil (v4.19): {real_url[:50]}...")
-                    
-                    # 2. Cari Meta Refresh / JS Location jika miner gagal
-                    if "google.com" in real_url:
-                        meta_match = re.search(r'<meta.*?url=["\']?(https?://[^"\' >]+)', body_text, re.I)
-                        if meta_match:
-                            real_url = meta_match.group(1).split('\\')[0].split('"')[0].strip()
-                        else:
-                            js_match = re.search(r'window\.location\.replace\(["\'](https?://[^"\' >]+)', body_text, re.I)
-                            if js_match:
-                                real_url = js_match.group(1).split('\\')[0].split('"')[0].strip()
-            except: pass
-        
-        # LAPIS 2.9: Python GNews Library Decode (v5.31 - URL baru AU_yqL)
-        if "news.google.com" in real_url:
-            try:
-                from gnews import GNews
-                _gn = GNews(language='id', country='ID')
-                _decoded = _gn.get_news_by_url_decode(gnews_url) if hasattr(_gn, 'get_news_by_url_decode') else None
-                if not _decoded:
-                    # Alternatif: ambil URL dari GNews library langsung menggunakan method internal
-                    import sys
-                    sys.path.insert(0, '/home/user/antigravity/myenv/lib')
-                    try:
-                        from gnews.utils.utils import postprocess
-                        _decoded = postprocess(gnews_url)
-                    except: pass
-                if _decoded and "google.com" not in _decoded:
-                    real_url = _decoded
-                    print(f"[+] Lapis 2.9 (GNews Lib): {real_url[:60]}")
-            except: pass
-
-        # LAPIS 3: DotsSplash Decoder (Official Server-Side Resolution) - v4.11
-        if "news.google.com" in real_url:
-            print("[*] Mencoba Lapis 3: DotsSplash Official Resolver...")
-            dotsplash_url = resolve_google_news_url_dotsplash(gnews_url)
-            if dotsplash_url:
-                real_url = dotsplash_url
-                print(f"[+] Berhasil mendapatkan URL Asli via DotsSplash: {real_url}")
-        
-        # LAPIS 3.5: Public Webhook Decoder (v5.31 - Cadangan saat DotsSplash rate-limited)
-        if "news.google.com" in real_url:
-            try:
-                _b64_key = real_url.split("/articles/")[-1].split("?")[0] if "/articles/" in real_url else real_url.split("/rss/articles/")[-1].split("?")[0]
-                _webhook_url = f"https://api.allorigins.win/raw?url=https://news.google.com/articles/{_b64_key}"
-                _wh_resp = SEARCH_SESSION.get(_webhook_url, timeout=8, headers=get_human_headers(target="google"))
-                if _wh_resp.status_code == 200 and "news.google.com" not in _wh_resp.url:
-                    real_url = _wh_resp.url
-                    print(f"[+] Lapis 3.5 (AllOrigins Redirect): {real_url[:60]}")
-            except: pass
-        
-        # --- LAPIS 4: ORIGINAL URL RECOVERY (RESILIENT SEARCH) ---
-        if not real_url or "google.com" in real_url:
-            print(f"[!] Decoder Gagal/Limit (429). Menjalankan Lapis 4: Resilient Search...")
-            recovered_url = search_original_url_fallback(gnews_title, gnews_publisher_name, gnews_publisher_url)
-            if recovered_url:
-                real_url = recovered_url
-                print(f"[+] Berhasil mendapatkan Tautan Asli: {real_url}")
-
-        if "news.google.com" not in real_url:
-            print(f"[+] Berhasil mendapatkan Tautan Asli: {real_url}")
-            # v4.21 SAVE TO CACHE
-            if gnews_url not in URL_CACHE:
+                        for pat in patterns:
+                            m = re.search(pat, res_body.text, re.I)
+                            if m:
+                                found = m.group(1).split('\\')[0].split('"')[0].split("'")[0].split("&amp;")[0].strip()
+                                if len(found) > 15 and "google.com" not in found:
+                                    real_url = found
+                                    print(f"[+] Sniper Lapis 2 (DOM): SUCCESS -> {real_url[:50]}...")
+                                    break
+                except: pass
+            
+            # LAPIS 3: Official DotsSplash / Public Webhook Resolver
+            if "news.google.com" in real_url:
+                try:
+                    # GNews postprocess logic
+                    from gnews.utils.utils import postprocess
+                    decoded_lib = postprocess(gnews_url)
+                    if decoded_lib and "google.com" not in decoded_lib:
+                        real_url = decoded_lib
+                        print(f"[+] Sniper Lapis 3 (Lib): SUCCESS -> {real_url[:50]}...")
+                except: pass
+            
+            # LAPIS 4: GENIUS SEARCH FALLBACK (DuckDuckGo Sniper)
+            if "news.google.com" in real_url:
+                print("[*] Sniper Lapis 4: Menjalankan Search Fallback (Zero-Tolerance)...")
+                fallback = genius_search_fallback(gnews_title, gnews_publisher_name)
+                if fallback:
+                    real_url = fallback
+            
+            # FINAL VALIDATION
+            if "news.google.com" in real_url:
+                print("[!] Sniper Warning: Gagal membongkar enkripsi Google.")
+            else:
                 URL_CACHE[gnews_url] = real_url
                 save_url_cache(URL_CACHE)
+
+        # --- TAHAP SCRAPING KONTEN ---
+        # (Sisa logika scraping konten tetap sama namun dioptimalkan)
+        domain = urlparse(real_url).netloc.replace('www.', '')
+        
+        # v5.42: Resilient Download dengan Cloudflare Bypass
+        html = resilient_download_full(real_url)
+        if not html:
+            return None
+            
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # 1. Judul & Konten
+        title = extract_clean_title(soup) or gnews_title
+        article_text = extract_clean_article_body(soup, real_url)
+        
+        if not article_text or len(article_text) < 150:
+            print(f"[-] Konten terlalu pendek ({len(article_text) if article_text else 0} char) -> Gagal.")
+            return None
+            
+        # 2. Metadata (Penulis/Aktor/Kontak)
+        # Ambil Metadata Aktor (Tokoh/Reporter/Editor) via Sniffer
+        aktor_info = sniff_actors_and_editorial(soup, html)
+        
+        # 3. PROFILING LAMAN (v5.88: Smart Discovery)
+        # Mencari info kontak media secara agresif di halaman ini dan halaman terkait
+        profiling_laman = ""
+        try:
+             # v5.88: Heuristic sniffer (Phone/WA/Email/Address)
+             profiling_laman = sniff_contact_and_editorial_board(soup, is_profile_page=False)
+             
+             # Jika belum cukup detail, cari halaman profil redaksi
+             if len(profiling_laman) < 100:
+                 sub_text = scrape_contact_page(real_url, soup)
+                 if sub_text:
+                     profiling_laman += "\n" + sub_text
+        except: pass
+
+        return {
+            "judul": title,
+            "tautan": real_url,
+            "laman": domain,
+            "aktor": aktor_info,
+            "kontak": profiling_laman,
+            "konten_lengkap": article_text[:5000] # Limit untuk efisiensi AI
+        }
+        
+    except Exception as e:
+        print(f"[-] Sniper Error: {e}")
+        return None
             
         # Download artikel dari URL asli yang sudah final
         # v5.19: MOBILE REDIRECT BYPASS (Special Handshake for GNews)

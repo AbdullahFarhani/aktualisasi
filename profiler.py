@@ -36,19 +36,20 @@ JUDUL BERITA: {judul}
 {redaksi_terpotong}
 ================================
 
-TUGAS ANALISIS:
-1. FILTER WILAYAH JAWA TIMUR (STRICT GEOFENCE):
-   - Pastikan insiden fisik/kriminal terjadi di Jawa Timur. 
-   - JANGAN PERNAH gunakan alamat redaksi di footer untuk menentukan lokasi.
-   - JIKA BERITA NASIONAL (Pejabat Pusat/Artis Jakarta) dilaporkan di Jakarta/Polda Metro, set 'is_in_east_java' = false.
-   - Jika lokasi tidak eksplisit di Jatim, set 'is_in_east_java' = false.
-2. SENTIMEN NEGATIF: Tentukan apakah berita ini mengandung isu negatif/ancaman (korupsi, kriminal, KDKMP bermasalah, TNI bermasalah, mbg keracunan, isu internal TNI, dsb).
-3. EKSTRAKSI PROFILING LAMAN (UTAMA):
-   - Ambil Nama Laman, Alamat, Jajaran Redaksi (Detail: Pemred, Editor, Manajemen), dan KONTAK (WA/Telp/Email).
-   - JANGAN masukkan jajaran redaksi/manajemen ke dalam field 'actors_involved'.
-4. EKSTRAKSI AKTOR BERITA: Tokoh naratif (Tersangka, Korban, Reporter, Editor).
+TUGAS ANALISIS INTELIJEN (v5.90):
+1. STRICT GEOFENCE JAWA TIMUR:
+   - Fokus: Kejadian fisik/kriminal di wilayah Jatim.
+   - Pengecualian: Abaikan berita nasional murni (Jakarta/Pusat) kecuali ada dampak fisik langsung di Jatim.
+   - Peringatan: JANGAN gunakan alamat redaksi di footer sebagai lokasi kejadian.
+2. SENTIMEN NEGATIF & ANCAMAN (HIGH-INTELLIGENCE):
+   - Deteksi narasi negatif terselubung: Kekecewaan publik, kegagalan program (mbg, jembatan, koperasi), pelanggaran disiplin oknum TNI (cerai, lgbt, flexing), dan inefisiensi birokrasi.
+   - PRIORITAS: Jika berita membahas TNI, Koperasi Merah Putih, atau MBG dengan nuansa masalah, set 'is_negative_threat' = true.
+3. PROFILING MEDIA (DEEP SCAN):
+   - Ekstrak: Nama Laman, Alamat Fisik, Jajaran Redaksi/Manajemen Lengkap (Pemred, Editor, dsb), dan KONTAK (WhatsApp, Telepon, Email).
+   - WhatsApp/Telepon adalah PRIORITAS UTAMA. Cari di seluruh teks profiling.
+4. IDENTIFIKASI AKTOR: Pisahkan antara Aktor Berita (Pelaku/Korban) dengan Kru Media (Reporter/Editor).
 
-KEMBALIKAN JSON DENGAN STRUKTUR BERIKUT:
+KEMBALIKAN JSON (STRICT FORMAT):
 {{
     "is_negative_threat": true/false,
     "is_in_east_java": true/false,
@@ -56,11 +57,11 @@ KEMBALIKAN JSON DENGAN STRUKTUR BERIKUT:
     "contact_and_address": {{
         "nama_laman": "Nama Media",
         "alamat": "Alamat Lengkap",
-        "redaksi": "Jajaran Redaksi/Manajemen Lengkap",
-        "kontak": "Nomor WA/Telepon (WAJIB!), Email, dsb",
-        "info_lain": "Informasi tambahan lainnya"
+        "redaksi": "Jajaran Redaksi Lengkap",
+        "kontak": "WhatsApp: [No], Telp: [No], Email: [Email]",
+        "info_lain": "Informasi profiling lainnya"
     }},
-    "fakta_5w1h": "Narasi Fakta Berita (2-3 Paragraf)"
+    "fakta_5w1h": "Analisis fakta mendalam (2-3 Paragraf)"
 }}
 """
     # Pilih model saat ini dari daftar rotasi

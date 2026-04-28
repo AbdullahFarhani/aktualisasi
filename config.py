@@ -196,13 +196,9 @@ GNEWS_LANGUAGE = 'id'
 GNEWS_COUNTRY = 'ID'
 GNEWS_PERIOD = '1d' # Perayapan awal dalam kurun waktu 1 hari terakhir
 CRAWL_INTERVAL_SECONDS = 3600 # Waktu tunggu jika siklus sudah selesai (1 jam)
-# Konfigurasi Network & DNS (v5.43)
-USE_CLOUDFLARE_DNS = True # Menggunakan DoH (DNS-over-HTTPS) Cloudflare 1.1.1.1
-# --- STEALTH MODE CONFIG (v5.51) ---
-# Mode 'Lambat tapi Selamat' (Slow is Okay)
-# v5.89: Jeda dioptimalkan untuk target siklus 6 jam (1600 query)
-DELAY_BETWEEN_REQUESTS = 8 # Jeda dasar diturunkan untuk mengejar target 6 jam
-STEALTH_JITTER = (2, 8)    # Jeda acak diperkecil agar total siklus aman
+# v5.90: GENIUS STEALTH MODE (Prioritas: Anti-Blokir & Keberhasilan Link)
+DELAY_BETWEEN_REQUESTS = 45 # Jeda dasar sangat panjang (45 detik) demi keamanan absolut
+STEALTH_JITTER = (30, 90)    # Jeda tambahan sangat acak (30-90 detik) untuk mematikan pola bot
 
 USE_PROXY = False # Set True jika ingin menggunakan proxy manual di bawah
 PROXY_SETTING = {
