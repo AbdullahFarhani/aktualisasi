@@ -4,6 +4,15 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v5.89] — 2026-04-28
+### Full Requirement Alignment
+- **Cycle Optimization**: Menyesuaikan `DELAY_BETWEEN_REQUESTS` (8s) dan `STEALTH_JITTER` (2-8s) untuk memastikan 50 kata kunci di 32 kota (1600 query) selesai dalam target 6 jam.
+- **Strict Geofencing v5.89**: Mengaktifkan kembali aturan penolakan tokoh nasional dan proteksi terhadap alamat redaksi di footer untuk mencegah False Positive lokasi.
+- **Expanded Threat Intelligence**: Menambahkan pola ancaman indisipliner, sanksi, dan pecat TNI ke dalam `POLA_ANCAMAN`.
+- **Media Profiling Detail**: Memperketat instruksi AI untuk mengekstrak jajaran redaksi secara lengkap (bukan ringkasan singkat).
+
+---
+
 ## [v5.88] — 2026-04-28
 ### Intelligence Profiling & Contact Genius
 - **Enhanced Contact Scraping**: Meningkatkan agresivitas deteksi nomor telepon/WA dengan regex baru yang mencakup format lokal (08..., (021)...) dan capture otomatis link `wa.me`.

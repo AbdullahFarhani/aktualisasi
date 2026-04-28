@@ -37,13 +37,16 @@ JUDUL BERITA: {judul}
 ================================
 
 TUGAS ANALISIS:
-1. FILTER WILAYAH JAWA TIMUR (STRICT):
-   - Pastikan kejadian fisik/kriminal terjadi di Jawa Timur. Jika tidak, set 'is_in_east_java' = false.
-2. SENTIMEN NEGATIF: Tentukan apakah berita ini mengandung isu negatif/ancaman (korupsi, kriminal, KDKMP bermasalah, TNI bermasalah, mbg keracunan, dsb).
+1. FILTER WILAYAH JAWA TIMUR (STRICT GEOFENCE):
+   - Pastikan insiden fisik/kriminal terjadi di Jawa Timur. 
+   - JANGAN PERNAH gunakan alamat redaksi di footer untuk menentukan lokasi.
+   - JIKA BERITA NASIONAL (Pejabat Pusat/Artis Jakarta) dilaporkan di Jakarta/Polda Metro, set 'is_in_east_java' = false.
+   - Jika lokasi tidak eksplisit di Jatim, set 'is_in_east_java' = false.
+2. SENTIMEN NEGATIF: Tentukan apakah berita ini mengandung isu negatif/ancaman (korupsi, kriminal, KDKMP bermasalah, TNI bermasalah, mbg keracunan, isu internal TNI, dsb).
 3. EKSTRAKSI PROFILING LAMAN (UTAMA):
-   - Ambil Nama Laman, Alamat, Jajaran Redaksi (Maksimal 5 Nama Penting), dan KONTAK (WA/Telp/Email).
+   - Ambil Nama Laman, Alamat, Jajaran Redaksi (Detail: Pemred, Editor, Manajemen), dan KONTAK (WA/Telp/Email).
    - JANGAN masukkan jajaran redaksi/manajemen ke dalam field 'actors_involved'.
-4. EKSTRAKSI AKTOR BERITA: Ambil tokoh dalam narasi berita (Tersangka, Korban, Reporter, Editor).
+4. EKSTRAKSI AKTOR BERITA: Tokoh naratif (Tersangka, Korban, Reporter, Editor).
 
 KEMBALIKAN JSON DENGAN STRUKTUR BERIKUT:
 {{
@@ -53,8 +56,8 @@ KEMBALIKAN JSON DENGAN STRUKTUR BERIKUT:
     "contact_and_address": {{
         "nama_laman": "Nama Media",
         "alamat": "Alamat Lengkap",
-        "redaksi": "Jajaran Redaksi/Manajemen",
-        "kontak": "Nomor WA/Telepon (WAJIB CARI!), Email, dsb",
+        "redaksi": "Jajaran Redaksi/Manajemen Lengkap",
+        "kontak": "Nomor WA/Telepon (WAJIB!), Email, dsb",
         "info_lain": "Informasi tambahan lainnya"
     }},
     "fakta_5w1h": "Narasi Fakta Berita (2-3 Paragraf)"

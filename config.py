@@ -159,7 +159,7 @@ FORBIDDEN_KEYWORDS = [
 #     "oplosan",
 #     "sesat",
 #     "radikalisme",
-# v5.88: Reguler Ancaman Jatim (Optimized to 19)
+# v5.89: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
     "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
     "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi",
@@ -200,8 +200,9 @@ CRAWL_INTERVAL_SECONDS = 3600 # Waktu tunggu jika siklus sudah selesai (1 jam)
 USE_CLOUDFLARE_DNS = True # Menggunakan DoH (DNS-over-HTTPS) Cloudflare 1.1.1.1
 # --- STEALTH MODE CONFIG (v5.51) ---
 # Mode 'Lambat tapi Selamat' (Slow is Okay)
-DELAY_BETWEEN_REQUESTS = 25 # Jeda dasar ditingkatkan demi keamanan absolut
-STEALTH_JITTER = (20, 60)    # Jeda tambahan acak untuk tugas berat
+# v5.89: Jeda dioptimalkan untuk target siklus 6 jam (1600 query)
+DELAY_BETWEEN_REQUESTS = 8 # Jeda dasar diturunkan untuk mengejar target 6 jam
+STEALTH_JITTER = (2, 8)    # Jeda acak diperkecil agar total siklus aman
 
 USE_PROXY = False # Set True jika ingin menggunakan proxy manual di bawah
 PROXY_SETTING = {
