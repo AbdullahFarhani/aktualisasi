@@ -157,7 +157,8 @@ def process_artikel(artikel, keyword_asli, lokasi):
         teks=hasil_scrape['text'],
         laman_redaksi=hasil_scrape['contact_text'],
         keyword=keyword_asli,
-        lokasi=lokasi
+        lokasi=lokasi,
+        aktor_metadata=hasil_scrape.get('actors', "")
     )
     
     if profil is None:

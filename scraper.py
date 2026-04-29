@@ -11,7 +11,19 @@ from openai import OpenAI
 import urllib3
 # Matikan peringatan SSL Insecure jika terpaksa bypass ISP
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from config import GROQ_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, USE_CLOUDFLARE_DNS, USE_PROXY, PROXY_SETTING, USE_AUTO_HARVESTER
+from config import GROQ_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, USE_CLOUDFLARE_DNS, USE_PROXY, PROXY_SETTING, USE_AUTO_HARVESTER, USE_PLAYWRIGHT
+try:
+    from googlenewsdecoder import new_decoderv1
+except ImportError:
+    new_decoderv1 = None
+
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+    from playwright_stealth import stealth_sync
+except ImportError:
+    sync_playwright = None
+    PlaywrightTimeoutError = None
+    stealth_sync = None
 
 import sys
 import os
@@ -920,6 +932,52 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
     
     return captured_text
 
+def sniff_actors_and_editorial(soup, html):
+    """
+    v5.97: HEURISTIC ACTOR & EDITORIAL SNIFFER
+    Mencari nama-nama aktor (Reporter, Editor, Penulis) dan tokoh yang disebut dalam berita.
+    """
+    if not soup: return "Informasi Aktor Tidak Ditemukan"
+    
+    results = []
+    
+    # 1. Cari via Meta Tags (Standard SEO)
+    meta_author = soup.find("meta", {"name": ["author", "reporter", "publisher"]})
+    if meta_author and meta_author.get("content"):
+        results.append(f"Meta-Author: {meta_author['content']}")
+        
+    # 2. Cari via Heuristic Text Patterns (Pola Berita Indonesia)
+    # Pola: Penulis: [Nama], Editor: [Nama], Reporter: [Nama]
+    body_text = soup.get_text()
+    patterns = [
+        r"(?:Penulis|Reporter|Wartawan|Oleh|Jurnalis)\s*[:\-]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})",
+        r"(?:Editor|Redaktur|Copy Editor)\s*[:\-]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})",
+        r"\(([A-Z]{2,5}/[A-Z]{2,5})\)" # Pola Kode Inisial (misal: (HAN/ANT))
+    ]
+    
+    found_editorial = []
+    for pat in patterns:
+        matches = re.findall(pat, body_text)
+        for m in matches:
+            if m and len(m) > 2 and m not in found_editorial:
+                found_editorial.append(m)
+    
+    if found_editorial:
+        results.append(f"Redaksi: {', '.join(found_editorial)}")
+        
+    # 3. Tokoh yang sering disebut (Aktor Utama)
+    # Mencari kata yang diawali huruf kapital di tengah kalimat (Sangat kasar tapi efektif)
+    # HANYA ambil yang muncul di 2 paragraf pertama
+    first_p = " ".join([p.get_text() for p in soup.find_all("p")[:2]])
+    tokoh_matches = re.findall(r"(?:Bapak|Ibu|Kepala|Mayor|Letkol|Kolonel|Kapolres|Dandim)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})", first_p)
+    if tokoh_matches:
+        results.append(f"Tokoh Terkait: {', '.join(list(set(tokoh_matches)))}")
+        
+    if not results:
+        return "Informasi Aktor Minimal (Gagal Parsing Heuristic)"
+        
+    return " | ".join(results)
+
 def scrape_contact_page(domain, html_content=None):
     """
     Mencari halaman Redaksi/Kontak dari seluruh DOM (header+body+footer),
@@ -1118,31 +1176,98 @@ def decode_google_news_url_local(source_url):
     except:
         return None
 
+def extract_clean_title(soup):
+    """v5.91: Heuristic Title Extractor (Anti-Trash)"""
+    try:
+        # 1. OpenGraph
+        og = soup.find("meta", property="og:title")
+        if og and og.get("content"): return og["content"].strip()
+        # 2. Twitter
+        tw = soup.find("meta", name="twitter:title")
+        if tw and tw.get("content"): return tw["content"].strip()
+        # 3. H1 (Utama)
+        h1 = soup.find("h1")
+        if h1: return h1.get_text().strip()
+        # 4. Title Tag
+        if soup.title: return soup.title.string.strip()
+    except: pass
+    return ""
+
+def extract_clean_article_body(soup, url):
+    """v5.91: Smart Content Extraction (Cleaner Logic)"""
+    # Bersihkan elemen mengganggu
+    for tag in soup(["script", "style", "nav", "header", "footer", "aside", "form", "ins", "iframe", "noscript"]):
+        tag.decompose()
+        
+    # Cari kontainer utama
+    selectors = ["article", ".article-content", ".entry-content", ".detail__body-text", ".read__content", ".post-content", ".isi-berita", ".content"]
+    for s in selectors:
+        target = soup.select_one(s)
+        if target:
+            # Buang widget internal
+            for w in target.select(".baca-juga, .read-also, .ads, .advertisement, .video-container, .related"):
+                w.decompose()
+            txt = target.get_text(separator="\n").strip()
+            if len(txt) > 200: return txt
+            
+    # Fallback: Cari div dengan densitas teks tertinggi
+    paragraphs = soup.find_all("p")
+    if paragraphs:
+        return "\n\n".join([p.get_text().strip() for p in paragraphs if len(p.get_text()) > 30])
+    return ""
+
 def genius_search_fallback(title, publisher=""):
     """
-    v5.90: GENIUS SEARCH FALLBACK (Sniper Layer 4)
-    Jika Google News memblokir seluruh akses, cari judul artikel di DuckDuckGo 
-    untuk mendapatkan link aslinya secara instan.
+    v5.92: ISP-RESILIENT SEARCH FALLBACK (DoH Sniper)
+    Bypass 'Internet Baik' DNS Hijacking dengan resolusi DoH Cloudflare 1.1.1.1.
     """
     import urllib.parse
     search_query = f'"{title}" {publisher}'.strip()
     search_url = f"https://duckduckgo.com/html/?q={urllib.parse.quote(search_query)}"
     
-    print(f"[*] Sniper Lapis 4: Menjalankan Search Fallback untuk '{title[:40]}...'")
-    try:
-        # Gunakan session khusus agar terlihat seperti browser beneran
-        resp = requests.get(search_url, headers=get_human_headers(), timeout=10)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            # Ambil hasil pencarian pertama
-            results = soup.find_all('a', class_='result__a', href=True)
-            for res in results:
-                found_url = res['href']
-                if "duckduckgo.com" not in found_url and "google.com" not in found_url:
-                    print(f"[+] Sniper Lapis 4 BERHASIL (DuckDuckGo): {found_url[:50]}...")
-                    return found_url
-    except Exception as e:
-        print(f"[-] Search Fallback Gagal: {e}")
+    print(f"[*] Sniper Lapis 4: Menembus DNS Hijacking via Cloudflare 1.1.1.1...")
+    
+    # Resolusi DNS Aman (Bypass ISP)
+    target_host = "duckduckgo.com"
+    safe_ip = resolve_dns_cloudflare(target_host)
+    
+    # Coba maksimal 3 jalur (DoH -> Proxy -> Direct)
+    for i in range(3):
+        try:
+            headers = get_human_headers(mode="desktop")
+            current_url = search_url
+            current_headers = headers.copy()
+            
+            # Jalur 1: DoH Sniper (Direct IP with Host Header)
+            if safe_ip and i == 0:
+                current_url = search_url.replace(target_host, safe_ip)
+                current_headers['Host'] = target_host
+                print(f"[*] Sniper Lapis 4: Menggunakan Jalur DoH Sniper ({safe_ip})...")
+            
+            # Jalur 2 & 3: Proxy Sniper
+            proxy = get_current_proxy() if (USE_AUTO_HARVESTER or USE_PROXY or i > 0) else None
+            
+            resp = requests.get(
+                current_url, 
+                headers=current_headers, 
+                timeout=12, 
+                proxies=proxy, 
+                verify=False # Bypass SSL check karena Host header mismatch
+            )
+            
+            if resp.status_code == 200 and "internetbaik" not in resp.url:
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                results = soup.find_all('a', class_='result__a', href=True)
+                for res in results:
+                    found_url = res['href']
+                    if "duckduckgo.com" not in found_url and "google.com" not in found_url:
+                        print(f"[+] Sniper Lapis 4 BERHASIL (DoH/Proxy Path): {found_url[:50]}...")
+                        return found_url
+            
+            print(f"[-] Jalur Sniper {i+1} Gagal (Blokir/Timeout).")
+        except Exception as e:
+            print(f"[-] Lapis 4 Error (Jalur {i+1}): {str(e)[:50]}")
+            
     return None
 
 def extract_link_from_meta_tags(html):
@@ -1166,58 +1291,87 @@ def extract_link_from_meta_tags(html):
     except: pass
     return None
 
-def resolve_google_news_url_dotsplash(source_url):
+def resolve_google_news_url_playwright(url):
     """
-    Lapis 2.5: Menggunakan API batchexecute Google untuk memecahkan enkripsi berat AU_yqL (v4.20).
+    v5.96: GHOST SNIPER (Ultra-Stealth Playwright)
+    Menembus proteksi bot Google dengan masking sidik jari browser.
     """
-    import base64
-    from urllib.parse import urlparse
+    if not sync_playwright or not USE_PLAYWRIGHT: return None
     
+    print(f"[*] Sniper Lapis 2: Menyalakan Ghost Sniper (Stealth Playwright)...")
     try:
-        # v4.20: WARM-UP SESSION
-        if not SEARCH_SESSION.cookies:
-            try: SEARCH_SESSION.get("https://news.google.com/", headers=get_human_headers(), timeout=5)
-            except: pass
+        with sync_playwright() as p:
+            # Gunakan proxy jika tersedia (Krusial untuk anti-blokir IP)
+            proxy_cfg = None
+            if USE_AUTO_HARVESTER or USE_PROXY:
+                p_current = get_current_proxy()
+                if p_current and "http" in p_current:
+                    proxy_cfg = {"server": p_current["http"]}
             
-        url = urlparse(source_url)
-        path = url.path.split("/")
-        if url.hostname == "news.google.com" and len(path) > 1 and path[-2] in ["articles", "read"]:
-            base64_str = path[-1]
-            # v5.44: RPC ID Fallback Strategy
-            rpc_ids = ["Fbv4je", "o009Wd", "m398dd"]
-            headers = get_human_headers(target="google")
-            headers["Content-Type"] = "application/x-www-form-urlencoded;charset=utf-8"
-            
-            for rpc_id in rpc_ids:
+            browser = p.chromium.launch(
+                headless=True,
+                proxy=proxy_cfg,
+                args=[
+                    "--no-sandbox", 
+                    "--disable-dev-shm-usage", 
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-infobars"
+                ]
+            )
+            try:
+                # v5.96: Konfigurasi Context menyerupai User Asli Indonesia
+                context = browser.new_context(
+                    user_agent=get_human_headers(mode="desktop")["User-Agent"],
+                    viewport={'width': 1920, 'height': 1080},
+                    locale="id-ID",
+                    timezone_id="Asia/Jakarta"
+                )
+                page = context.new_page()
+                
+                # AKTIFKAN STEALTH (Masking WebDriver, Permissions, etc.)
+                if stealth_sync:
+                    stealth_sync(page)
+                
+                # Optimasi Fast-Load
+                page.route("**/*.{png,jpg,jpeg,gif,css,svg,woff2}", lambda route: route.abort())
+                
+                # Akses URL dengan delay manusia
+                page.goto(url, wait_until="commit", timeout=30000)
+                
+                # Tunggu redirect dengan batas waktu wajar
                 try:
-                    payload = f'f.req=%5B%5B%5B%22{rpc_id}%22%2C%22%5B%5C%22garturlreq%5C%22%2C%5B%5B%5C%22en-US%5C%22%2C%5B%5D%2C%5B%5D%2Cnull%2Cnull%2Cnull%2Cnull%2C1%5D%2C%5B%5C%22{base64_str}%5C%22%2Cnull%2Cnull%2C1%5D%5D%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&'
+                    page.wait_for_url(lambda u: "google.com" not in u, timeout=15000)
+                    # Jeda mikro setelah redirect agar tidak terlihat seperti robot instan
+                    page.wait_for_timeout(random.randint(500, 1500))
                     
-                    resp = SEARCH_SESSION.post(
-                        "https://news.google.com/_/DotsSplashUi/data/batchexecute?rpcids=" + rpc_id,
-                        headers=headers,
-                        data={"f.req": payload},
-                        timeout=10,
-                        proxies=get_current_proxy() if (USE_AUTO_HARVESTER or USE_PROXY) else None
-                    )
-                    
-                    if resp.status_code == 200 and '[\\"garturlres\\",' in resp.text:
-                        text = resp.text
-                        header_marker = '[\\"garturlres\\",\\"'
-                        footer_marker = '\\",'
-                        idx = text.find(header_marker)
-                        if idx != -1:
-                            start = idx + len(header_marker)
-                            end = text.find(footer_marker, start)
-                            if end != -1:
-                                found_url = text[start:end].replace('\\\\', '\\').replace('\\/', '/')
-                                try:
-                                    return found_url.encode().decode('unicode_escape')
-                                except:
-                                    return found_url
-                except: continue
-        return None
-    except:
-        return None
+                    final_url = page.url
+                    if "google.com" not in final_url:
+                        print(f"[+] Ghost Sniper BERHASIL: {final_url[:50]}...")
+                        return final_url
+                except PlaywrightTimeoutError:
+                    if "google.com" not in page.url:
+                        return page.url
+            finally:
+                browser.close()
+    except Exception as e:
+        print(f"[-] Ghost Sniper Error: {str(e)[:50]}")
+    return None
+
+def resolve_google_news_url_dotsplash(source_url):
+    """Lapis cadangan internal (v4.20 logic)."""
+    try:
+        url = urlparse(source_url)
+        if url.hostname == "news.google.com":
+            base64_str = url.path.split("/")[-1]
+            rpc_id = "Fbv4je"
+            payload = f'f.req=%5B%5B%5B%22{rpc_id}%22%2C%22%5B%5C%22garturlreq%5C%22%2C%5B%5B%5C%22en-US%5C%22%2C%5B%5D%2C%5B%5D%2Cnull%2Cnull%2Cnull%2Cnull%2C1%5D%2C%5B%5C%22{base64_str}%5C%22%2Cnull%2Cnull%2C1%5D%5D%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&'
+            resp = SEARCH_SESSION.post("https://news.google.com/_/DotsSplashUi/data/batchexecute?rpcids=" + rpc_id,
+                                     headers={"Content-Type": "application/x-www-form-urlencoded"}, data={"f.req": payload}, timeout=10)
+            if resp.status_code == 200 and '[\\"garturlres\\",' in resp.text:
+                m = re.search(r'\[\\"garturlres\\",\\"(.*?)\\"', resp.text)
+                if m: return m.group(1).replace('\\\\', '\\').replace('\\/', '/')
+    except: pass
+    return None
 
 def extract_unique_keywords(text, limit=6):
     """Mengambil kata kunci paling unik (minimal 5 huruf) dari teks."""
@@ -1503,12 +1657,17 @@ def extract_article(artikel_obj):
                         print(f"[+] Sniper Lapis 1 (Head): SUCCESS -> {real_url[:50]}...")
                 except: pass
             
-            # LAPIS 2: Deep DOM Sniffer (JS/Meta/JSON-LD)
+            # LAPIS 2: ATOMIC BROWSER FALLBACK (Playwright) - Prioritas Tinggi
+            if "news.google.com" in real_url:
+                atomic_link = resolve_google_news_url_playwright(real_url)
+                if atomic_link:
+                    real_url = atomic_link
+
+            # LAPIS 3: Deep DOM Sniffer (JS/Meta/JSON-LD)
             if "news.google.com" in real_url:
                 try:
                     res_body = SEARCH_SESSION.get(real_url, headers=get_human_headers(mode="desktop"), timeout=15, verify=False)
                     if res_body.status_code == 200:
-                        # Sniper Patterns
                         patterns = [
                             r'url=["\']?(https?://[^"\' >]+)', # Meta Refresh
                             r'window\.location\.replace\(["\'](https?://[^"\' >]+)', # JS Redirect
@@ -1522,24 +1681,31 @@ def extract_article(artikel_obj):
                                 found = m.group(1).split('\\')[0].split('"')[0].split("'")[0].split("&amp;")[0].strip()
                                 if len(found) > 15 and "google.com" not in found:
                                     real_url = found
-                                    print(f"[+] Sniper Lapis 2 (DOM): SUCCESS -> {real_url[:50]}...")
+                                    print(f"[+] Sniper Lapis 3 (DOM): SUCCESS -> {real_url[:50]}...")
                                     break
                 except: pass
             
-            # LAPIS 3: Official DotsSplash / Public Webhook Resolver
+            # LAPIS 4: Huksley Edition (googlenewsdecoder / BatchExecute Sniper)
             if "news.google.com" in real_url:
                 try:
-                    # GNews postprocess logic
-                    from gnews.utils.utils import postprocess
-                    decoded_lib = postprocess(gnews_url)
-                    if decoded_lib and "google.com" not in decoded_lib:
-                        real_url = decoded_lib
-                        print(f"[+] Sniper Lapis 3 (Lib): SUCCESS -> {real_url[:50]}...")
-                except: pass
+                    if new_decoderv1:
+                        decoded = new_decoderv1(real_url, interval=random.randint(2, 5))
+                        if decoded.get("status") and decoded.get("decoded_url"):
+                            new_link = decoded["decoded_url"]
+                            if "google.com" not in new_link:
+                                real_url = new_link
+                                print(f"[+] Sniper Lapis 4 (Huksley): SUCCESS -> {real_url[:50]}...")
+                    else:
+                        decoded_lib = resolve_google_news_url_dotsplash(real_url)
+                        if decoded_lib and "google.com" not in decoded_lib:
+                            real_url = decoded_lib
+                            print(f"[+] Sniper Lapis 4 (Dots): SUCCESS -> {real_url[:50]}...")
+                except Exception as e:
+                    print(f"[-] Sniper Lapis 4 Error: {str(e)[:40]}")
             
-            # LAPIS 4: GENIUS SEARCH FALLBACK (DuckDuckGo Sniper)
+            # LAPIS 5: GENIUS SEARCH FALLBACK (DoH Sniper)
             if "news.google.com" in real_url:
-                print("[*] Sniper Lapis 4: Menjalankan Search Fallback (Zero-Tolerance)...")
+                print("[*] Sniper Lapis 5: Menjalankan Search Fallback (Zero-Tolerance)...")
                 fallback = genius_search_fallback(gnews_title, gnews_publisher_name)
                 if fallback:
                     real_url = fallback
@@ -1589,64 +1755,17 @@ def extract_article(artikel_obj):
         except: pass
 
         return {
-            "judul": title,
-            "tautan": real_url,
-            "laman": domain,
-            "aktor": aktor_info,
-            "kontak": profiling_laman,
-            "konten_lengkap": article_text[:5000] # Limit untuk efisiensi AI
+            "title": title,
+            "source_url": real_url,
+            "portal": domain,
+            "actors": aktor_info,
+            "contact_text": profiling_laman,
+            "text": article_text[:5000] # Limit untuk efisiensi AI
         }
         
     except Exception as e:
-        print(f"[-] Sniper Error: {e}")
+        print(f"[-] Sniper Fatal Error: {e}")
         return None
-            
-        # Download artikel dari URL asli yang sudah final
-        # v5.19: MOBILE REDIRECT BYPASS (Special Handshake for GNews)
-        # Seringkali pengalihan via jalur mobile lebih jarang diblokir dan lebih cepat.
-        # v5.59: MOBILE-IDENTITY SNIFFER (Special Handshake)
-        # Menyamar sebagai iPhone/Android untuk memicu pengalihan asli via meta-refresh
-        if "news.google.com" in real_url:
-            try:
-                mobile_headers = get_human_headers(mode="mobile")
-                m_resp = requests.get(real_url, headers=mobile_headers, timeout=10, allow_redirects=True, verify=False)
-                if "news.google.com" not in m_resp.url:
-                    real_url = m_resp.url
-                    print(f"[+] Mobile-Identity Sniffer Berhasil: {real_url[:60]}")
-                else:
-                    # Sniff via meta refresh di body
-                    m_match = re.search(r'url=["\']?(https?://[^"\' >]+)', m_resp.text, re.I)
-                    if m_match:
-                        real_url = m_match.group(1).split('"')[0].split("'")[0]
-                        print(f"[+] Meta-Refresh Sniffed (Mobile): {real_url[:60]}")
-            except: pass
-        
-        # v5.17: Deep Link Discovery via Meta Tags
-        try:
-            temp_res_html = resilient_download(real_url, timeout=10, target="google")
-            if temp_res_html:
-                meta_url = extract_link_from_meta_tags(temp_res_html)
-                if meta_url and "google.com" not in meta_url:
-                    real_url = meta_url
-                    print(f"[+] Deep-Link Terdeteksi (Meta Tag): {real_url}")
-                else:
-                    # Fallback to canonical regex if meta sniffer failed
-                    canonical_match = re.search(r'<link.*?rel=["\']canonical["\'].*?href=["\'](https?://[^"\' >]+)', temp_res_html[:10000], re.I)
-                    if canonical_match:
-                        canonical_url = canonical_match.group(1).split('\\')[0].split('"')[0].split("'")[0].strip()
-                        if "google.com" not in canonical_url:
-                            real_url = canonical_url
-                            print(f"[+] Canonical Link Terdeteksi Dini: {real_url}")
-        except: pass
-        
-        # v5.75: FINAL URL VALIDATOR — Tolak URL mesin pencari yang bocor
-        search_engine_leak = ['bing.com/search', 'google.com/search', 'yahoo.com/search', 'duckduckgo.com/?q', 'yandex.com/search']
-        if any(se in real_url.lower() for se in search_engine_leak):
-            print(f"[!] BLOCKED: URL final adalah halaman mesin pencari: {real_url[:60]}... -> DITOLAK.")
-            return None
-        
-        # v5.4: FULL CONTENT DOWNLOAD WITH PAGINATION SUPPORT
-        html_content = resilient_download_full(real_url, timeout=12, target="google")
         
         if not html_content:
             # v5.31: Coba AMP bypass untuk portal yang memblokir scraper pada URL normal

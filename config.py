@@ -1,23 +1,23 @@
 import os
 
 # Konfigurasi HuggingFace Token (v5.65)
-os.environ["HF_TOKEN"] = "hf_YOUR_TOKEN_HERE"
+os.environ["HF_TOKEN"] = "PLACEHOLDER_HF_TOKEN"
 
 # Konfigurasi Telegram
-TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID_HERE"
+TELEGRAM_BOT_TOKEN = "PLACEHOLDER_TOKEN"
+TELEGRAM_CHAT_ID = "PLACEHOLDER_ID"
 
-TELEGRAM_BOT_TOKEN_2 = "YOUR_BOT_TOKEN_2_HERE"
-TELEGRAM_CHAT_ID_2 = "YOUR_CHAT_ID_2_HERE"
+TELEGRAM_BOT_TOKEN_2 = "PLACEHOLDER_TOKEN_2"
+TELEGRAM_CHAT_ID_2 = "PLACEHOLDER_ID_2"
 
 # API Key Google Gemini
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+GEMINI_API_KEY = "PLACEHOLDER_KEY"
 
 # API Key OpenRouter (Gunakan Model Qwen / Llama Gratis)
-OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY_HERE"
+OPENROUTER_API_KEY = "PLACEHOLDER_KEY"
 
 # API Key Groq (30 RPM, 14.400 RPD - Super Cepat & Longgar)
-GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"
+GROQ_API_KEY = "PLACEHOLDER_KEY"
 
 # Daftar Model Groq untuk Rotasi (Menghindari 429)
 GROQ_MODELS = [
@@ -162,8 +162,8 @@ FORBIDDEN_KEYWORDS = [
 # v5.89: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
     "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
-    "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi",
-    "pupuk ilegal", "rokok ilegal",
+    "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi", "unjuk rasa",
+    "pupuk ilegal", "rokok ilegal", "tambang",
     "kdkmp", "kopdes", "kmp", "spbu", "bbm"
 ]
 
@@ -175,17 +175,17 @@ PRIORITY_KATA_KUNCI = [
     "koperasi merah putih", "koperasi", "proyek jembatan",
     # TNI & Aparat (Sniper Mode)
     "TNI", "oknum TNI", "TNI bermasalah", "TNI viral",
-    "Anggota TNI", "prajurit tni", "pengeroyokan tni", "insiden tni",
-    "keluarga TNI", "istri TNI", "batalyon",
+    "prajurit tni", "pengeroyokan tni", "insiden tni",
+    "keluarga TNI", "istri TNI", "batalyon", "militer",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "TNI cerai", "perceraian TNI", "TNI gugat cerai",
+    "TNI cerai", "TNI gugat cerai",
     # 2. Isu LGBT
     "TNI LGBT", "tentara LGBT", "TNI gay",
     # 3. Pernikahan Mewah
     "pernikahan mewah TNI", "resepsi mewah tentara", "pesta pernikahan TNI",
     # 4. Medsos Keluarga
-    "viral istri TNI", "viral keluarga TNI", "TNI flexing", "TNI pamer"
+    "viral istri TNI", "viral keluarga TNI", "TNI pamer"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota
@@ -197,6 +197,7 @@ GNEWS_COUNTRY = 'ID'
 GNEWS_PERIOD = '1d' # Perayapan awal dalam kurun waktu 1 hari terakhir
 CRAWL_INTERVAL_SECONDS = 3600 # Waktu tunggu jika siklus sudah selesai (1 jam)
 # v5.90: GENIUS STEALTH MODE (Prioritas: Anti-Blokir & Keberhasilan Link)
+USE_CLOUDFLARE_DNS = True # Menggunakan DoH (DNS-over-HTTPS) Cloudflare 1.1.1.1
 DELAY_BETWEEN_REQUESTS = 45 # Jeda dasar sangat panjang (45 detik) demi keamanan absolut
 STEALTH_JITTER = (30, 90)    # Jeda tambahan sangat acak (30-90 detik) untuk mematikan pola bot
 
@@ -209,4 +210,9 @@ PROXY_SETTING = {
 # --- GENIUS AUTO-PROXY HARVESTER (v5.43) ---
 # Jika diaktifkan, sistem akan otomatis mencari proxy gratis jika terblokir.
 USE_AUTO_HARVESTER = True 
+
+# --- ATOMIC SNIPER: PLAYWRIGHT (v5.94) ---
+# Aktifkan browser headless untuk membongkar URL yang paling sulit.
+# Sangat akurat tetapi memakan banyak RAM/CPU.
+USE_PLAYWRIGHT = True 
 # -------------------------------------------
