@@ -231,6 +231,55 @@ def get_current_proxy():
             return {"http": p, "https": p}
     return None
 
+def resilient_download_playwright(url, timeout=20, target="generic"):
+    """
+    v6.30: ATOMIC CONTENT SNIPER (Lapis 2 - Playwright Fallback)
+    Digunakan saat Lapis 1 (Requests) gagal dengan status 403 Forbidden.
+    Menyamar sebagai browser utuh untuk menembus Cloudflare/WAF.
+    """
+    if not sync_playwright or not USE_PLAYWRIGHT: return None
+    
+    print(f"[*] Sniper Lapis 2: Menyalakan Content Sniper (Stealth Playwright) untuk menembus 403...")
+    try:
+        with sync_playwright() as p:
+            proxy_cfg = None
+            if USE_AUTO_HARVESTER or USE_PROXY:
+                p_current = get_current_proxy()
+                if p_current and "http" in p_current:
+                    proxy_cfg = {"server": p_current["http"]}
+            
+            browser = p.chromium.launch(
+                headless=True,
+                proxy=proxy_cfg,
+                args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"]
+            )
+            try:
+                context = browser.new_context(
+                    user_agent=get_human_headers(mode="desktop")["User-Agent"],
+                    viewport={'width': 1366, 'height': 768}
+                )
+                page = context.new_page()
+                if stealth_sync: stealth_sync(page)
+                
+                # Optimasi kecepatan: Abai gambar/css
+                page.route("**/*.{png,jpg,jpeg,gif,css,svg,woff2}", lambda route: route.abort())
+                
+                # Akses dengan timeout lebih longgar untuk Lapis 2
+                resp = page.goto(url, wait_until="domcontentloaded", timeout=timeout*1000)
+                
+                # Jeda agar script proteksi bot (jika ada) selesai dieksekusi
+                page.wait_for_timeout(random.randint(2000, 4000))
+                
+                content = page.content()
+                browser.close()
+                return decode_spa_html(content)
+            except Exception as e:
+                print(f"[-] Content Sniper Gagal: {e}")
+                browser.close()
+    except Exception as e_p:
+        print(f"[-] Playwright Critical Error: {e_p}")
+    return None
+
 def resilient_download(url, timeout=12, max_retries=2, target="generic", silent=False):
     """
     Fungsi unduh tangguh (v5.46 - Stealth Edition) dengan sistem jitter dinamis.
@@ -258,6 +307,15 @@ def resilient_download(url, timeout=12, max_retries=2, target="generic", silent=
             response = requests.get(url, headers=headers, timeout=timeout, verify=False, proxies=proxies)
             
             if response.status_code == 200:
+                # v6.40: JS CHALLENGE DETECTION (Cloudflare/Sucuri/etc)
+                low_text = response.text.lower()
+                is_challenge = any(kw in low_text for kw in ['javascript is required', 'browser to support javascript', 'challenge-running', 'checking your browser', 'captcha'])
+                
+                if is_challenge and not silent:
+                    print(f"[*] JS Challenge terdeteksi (Cloudflare/WAF)! Mencoba Lapis 2...")
+                    pw_content = resilient_download_playwright(url, timeout=timeout, target=target)
+                    if pw_content: return pw_content
+                
                 return decode_spa_html(response.text)
             elif response.status_code == 429:
                 if "google" in target or "bing" in target or "yandex" in target or "yahoo" in target or "duckduckgo" in target:
@@ -272,7 +330,13 @@ def resilient_download(url, timeout=12, max_retries=2, target="generic", silent=
                 continue
             elif response.status_code == 403:
                 last_error = f"403 Forbidden ({urlparse(url).netloc})"
-                # Jika 403, coba jeda lama karena kemungkinan kena firewall
+                # v6.30: FALLBACK KE PLAYWRIGHT (Lapis 2) JIKA 403
+                if not silent: print(f"[*] 403 TERDETEKSI! Mencoba Lapis 2 (Atomic Content Sniper)...")
+                pw_content = resilient_download_playwright(url, timeout=timeout, target=target)
+                if pw_content:
+                    if not silent: print(f"[+] Lapis 2 BERHASIL menembus 403!")
+                    return pw_content
+                # Jika Playwright juga gagal, coba jeda lama
                 time.sleep(10)
             elif response.status_code == 500 and "yahoo" in target:
                 if not silent: print(f"[!] Yahoo menyulut Error 500. Mengabaikan sisa percobaan...")
@@ -520,35 +584,39 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         if html:
             rsoup = BeautifulSoup(html, 'html.parser')
             
-            # v5.75: JAWAPOS SPA JSON PARSER — Ekstrak data kontak dari atribut data-page
-            # Jawapos Radar menggunakan SPA (React/Vue) di mana data kontak ada di JSON, bukan teks HTML
+            # v6.31: JAWAPOS SPA JSON PARSER (DEEP SCAN)
             if 'jawapos.com' in target_url:
                 data_div = rsoup.find('div', attrs={'data-page': True})
                 if data_div:
                     try:
                         import json as _json
                         page_data = _json.loads(data_div['data-page'])
+                        # Cari di props.factory (Standard Radar)
                         factory = page_data.get('props', {}).get('factory', {})
+                        # Fallback ke props.site (General Jawapos)
+                        if not factory: factory = page_data.get('props', {}).get('site', {})
+                        
                         if factory:
                             jp_info = []
-                            jp_info.append(f"Nama Media: {factory.get('PUBLISHER_NAME', factory.get('TITLE', ''))}")
-                            jp_info.append(f"Alamat: {factory.get('ADDRESS', '-')}")
-                            jp_info.append(f"Telepon: {factory.get('PHONE', '-')}")
-                            jp_info.append(f"Fax: {factory.get('FAX', '-')}")
-                            jp_info.append(f"Email: {factory.get('EMAIL', '-')}")
-                            jp_info.append(f"WhatsApp: {factory.get('WHATSAPP', '-')}")
-                            jp_info.append(f"WhatsApp Channel: {factory.get('WHATSAPP_CHANNEL', '-')}")
-                            jp_info.append(f"Facebook: {factory.get('FACEBOOK', '-')}")
-                            jp_info.append(f"Instagram: {factory.get('INSTAGRAM', '-')}")
-                            jp_info.append(f"Twitter: {factory.get('TWITTER', '-')}")
-                            jp_info.append(f"Copyright: {factory.get('COPYRIGHT', '-')}")
+                            p_name = factory.get('PUBLISHER_NAME', factory.get('TITLE', factory.get('name', '')))
+                            p_addr = factory.get('ADDRESS', factory.get('address', ''))
+                            p_phone = factory.get('PHONE', factory.get('phone', ''))
+                            p_wa = factory.get('WHATSAPP', factory.get('whatsapp', ''))
+                            p_email = factory.get('EMAIL', factory.get('email', ''))
+                            
+                            if p_name: jp_info.append(f"Nama Media: {p_name}")
+                            if p_addr: jp_info.append(f"Alamat: {p_addr}")
+                            if p_phone: jp_info.append(f"Telepon: {p_phone}")
+                            if p_wa: jp_info.append(f"WhatsApp: {p_wa}")
+                            if p_email: jp_info.append(f"Email: {p_email}")
+                            
                             jp_fragment = "\n".join(jp_info)
-                            if len(jp_fragment) > 50:
-                                print(f"[+] Jawapos SPA JSON Parser: Berhasil ekstrak profil dari data-page!")
+                            if len(jp_fragment) > 30:
+                                print(f"[+] Jawapos/Radar Sniper: Berhasil menembus SPA Payload!")
                                 hasil_gabungan.append(jp_fragment)
                                 if len(hasil_gabungan) >= 2: continue
                     except Exception as e_jp:
-                        print(f"[-] Jawapos JSON Parser gagal: {str(e_jp)[:50]}")
+                        print(f"[-] Jawapos JSON Sniper gagal: {str(e_jp)[:50]}")
             
             # Bersihkan elemen pengganggu
             for s in rsoup(['script', 'style', 'nav', 'header', 'footer', 'iframe', 'ins']): s.decompose()
@@ -598,6 +666,7 @@ def bersihkan_konten_kontak(teks):
 # Kata kunci yang relevan isi teks kontak profil (v5.32: Diperluas ke Jakarta/Global)
 KATA_KUNCI_KONTEN = [
     'jalan', 'jl.', 'jl ', '@', '(at)', '[at]', '08', '+62', '031', '033', '034', '035', '032', '036', '021', 'telp', 'fax', 'email', 
+    'redaksi:', 'wa:', 'kontak:', 'telepon:', 'whatsapp:', 'pusat berita', 'hotline', 'dewan pers', 'verifikasi', 'faktual',
     'redaksi', 'editor', 'wartawan', 'reporter', 'pemimpin', 'direktur', 'penanggung jawab', 'penerbit', 'wa ', 'whatsapp', 
     'hubungi', 'kramat pela', 'selatan', 'jakarta', 'mediakonteks', 'independenmedia', 'wa.me', 't.me',
     'komisaris', 'sekretaris', 'bendahara', 'staf', 'pimpinan', 'dewan', 'pengurus', 'petugas', 'kantor',
@@ -882,8 +951,8 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
     Menggabungkan Table Sniffing, List Sniffing, dan Element Scanning.
     """
     captured_text = ""
-    # v5.38: Prioritas pada Table (Susunan Redaksi) dan Address
-    area_penting = soup.find_all(['header', 'footer', 'main', 'article', 'div', 'aside', 'table', 'section', 'ul', 'ol', 'dl'])
+    # v6.41: Area pemindaian diperluas ke Sidebar dan Widget (Penting untuk WordPress)
+    area_penting = soup.find_all(['header', 'footer', 'main', 'article', 'div', 'aside', 'table', 'section', 'ul', 'ol', 'dl', 'address', 'sidebar', 'widget'])
     
     # 1. v5.39: CLOUDFLARE BYPASS
     for cf_node in soup.find_all(attrs={"data-cfemail": True}):
@@ -918,10 +987,13 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
                 continue
                 
             teks_el = element.get_text(" ", strip=True)
-            # v5.88: Deteksi langsung link WA me di dalam elemen
+            # v6.31: Deteksi link WA AKTUAL (Abaikan Channel/Share)
             wa_in_el = element.find('a', href=re.compile(r'wa\.me|whatsapp', re.I))
             if wa_in_el:
-                teks_el += f" (Link WA: {wa_in_el['href']})"
+                href_wa = wa_in_el['href'].lower()
+                # Filter: Jika link channel atau share (text=), abaikan
+                if 'channel' not in href_wa and 'text=' not in href_wa:
+                    teks_el += f" (WA: {wa_in_el['href']})"
 
             if 8 <= len(teks_el) < 1500 and any(kw in teks_el.lower() for kw in KATA_KUNCI_KONTEN):
                 if is_menu_noise(teks_el, is_profile_page=is_profile_page):
@@ -994,22 +1066,27 @@ def scrape_contact_page(domain, html_content=None):
             if not html: return ""
             soup = BeautifulSoup(html, 'html.parser')
         
-        # v5.88: GIGA-AGGRESSIVE CONTACT SCANNER (Heuristic Layer)
+        # v6.00: GIGA-AGGRESSIVE CONTACT SCANNER (Heuristic Layer)
+        def extract_contacts_from_text(text):
+            found_contacts = []
+            # Pola: 0812..., +62 812..., (021) ..., 031-..., WA: 08...
+            pola_telp = [
+                r'(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}(?:\d{1,4})?',
+                r'08[1-9]\d{1,2}[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}',
+                r'\(?0\d{2,3}\)?[\s\-\.]?\d{5,8}',
+                r'(?:wa|whatsapp|telp|hp|call|kontak|redaksi)\s*[:\-]?\s*(?:\+62|62|0)8[1-9][0-9\-\s]{7,15}'
+            ]
+            for p in pola_telp:
+                hits = re.findall(p, text, re.I)
+                for h in hits:
+                    clean_num = re.sub(r'\D', '', h)
+                    if 9 <= len(clean_num) <= 15:
+                        found_contacts.append(h.strip())
+            return list(set(found_contacts))
+
         all_raw_text = soup.get_text(" ", strip=True)
-        # 1. Email Scanner
+        phones = extract_contacts_from_text(all_raw_text)
         emails = re.findall(r'[a-zA-Z0-9._%+-]+(?:@|\(at\)|\[at\])[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', all_raw_text, re.I)
-        
-        # 2. Phone & WhatsApp Scanner (Optimized for Indonesian Formats)
-        # Mendukung: 0812..., +62 812..., (021) ..., 031-..., WA: 08...
-        pola_telp = [
-            r'(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}(?:\d{1,4})?', # Standard
-            r'08[1-9]\d{1,2}[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}', # Mobile 08...
-            r'\(?0\d{2,3}\)?[\s\-\.]?\d{5,8}' # Landline (021) 123456
-        ]
-        phones = []
-        for p in pola_telp:
-            hits = re.findall(p, all_raw_text)
-            phones.extend(hits)
         
         # 3. WA.ME Link Scanner (Direct WA)
         wa_links = []
@@ -1020,13 +1097,11 @@ def scrape_contact_page(domain, html_content=None):
                 if len(wa_num) >= 10:
                     wa_links.append(f"WhatsApp: +{wa_num}")
         
-        phones = [p.strip() for p in set(phones) if len(re.sub(r'\D', '', p)) >= 9]
-        
         if emails or phones or wa_links:
-            ext_contact = "\n[DATA KONTAK AKTUAL (HEURISTIK)]:\n"
+            ext_contact = "\n[DATA KONTAK AKTUAL (HEURISTIK v6.0)]:\n"
+            if wa_links: ext_contact += "Direct WA Link: " + " | ".join(list(set(wa_links))) + "\n"
+            if phones: ext_contact += "Telepon/WhatsApp: " + " | ".join(phones) + "\n"
             if emails: ext_contact += "Email: " + " | ".join(list(set(emails))) + "\n"
-            if phones: ext_contact += "Telepon: " + " | ".join(phones) + "\n"
-            if wa_links: ext_contact += "Link WA: " + " | ".join(list(set(wa_links))) + "\n"
             contact_text += ext_contact + "\n"
         
         # 1. v5.39: Sniff dari halaman utama/artikel
@@ -1089,6 +1164,8 @@ def scrape_contact_page(domain, html_content=None):
             '/susunan-redaksi', '/info-redaksi', '/hubungi-kami', '/pedoman-siber', '/about', '/kontak',
             '/boks-redaksi', '/editorial', '/manajemen', '/profil-media', '/struktur-organisasi',
             '/page/tentang-kami', '/page/redaksi', '/page/kontak-kami', '/page/contact-us',
+            '/site/page/tentang', '/site/page/redaksi', '/site/page/kontak', '/halaman/tentang-kami',
+            '/about?active=redaksi', '/about?active=about-us', '/about?active=kontak',
             f'/redaksi-{site_name}-{cur_year}', f'/susunan-redaksi-{cur_year}', f'/redaksi-{cur_year}'
         ]
         
@@ -1097,29 +1174,49 @@ def scrape_contact_page(domain, html_content=None):
             if fallback_url not in target_urls:
                 target_urls.append(fallback_url)
                 
-        if "tribunnews" in domain:
-            target_urls.append("https://www.tribunnews.com/about/")
-            target_urls.append("https://www.tribunnews.com/contact-us/")
+        # v6.43: TRIBUN NETWORK SPECIAL HANDLING
+        if 'tribunnews.com' in domain:
+            base_tribun = domain.split('tribunnews.com')[0] + 'tribunnews.com'
+            target_urls.append(urljoin(base_tribun, '/about/'))
+            target_urls.append(urljoin(base_tribun, '/contact-us/'))
+            target_urls.append(urljoin(base_tribun, '/about/redaksi'))
+            
+        # Urutkan agar 'redaksi', 'kontak', 'tentang' muncul di awal
+        def priority_score(url):
+            score = 0
+            low_url = url.lower()
+            if 'redaksi' in low_url or 'editorial' in low_url: score += 10
+            if 'kontak' in low_url or 'contact' in low_url: score += 8
+            if 'tentang' in low_url or 'about' in low_url: score += 5
+            return score
+            
+        target_urls.sort(key=priority_score, reverse=True)
         
-        # 3. Kunjungi halaman target (Redaksi/Kontak/About) jika ditemukan
-        sub_page_text = ""
-        # Pengecekan dimaksimalkan hingga 25 links (menghindari kelaparan target dan memprioritaskan cakupan)
-        for target in target_urls[:25]:
+        # Pengecekan dimaksimalkan hingga 15 links (v6.34: Giga-Intel)
+        for target in target_urls[:15]:
             try:
-                # Perpendek timeout agar pengecekan massal 15 links tidak membebani loop utama (7 detik max)
-                html_redaksi = resilient_download(target, timeout=7, max_retries=0, target="google", silent=True)
+                # v6.25: Gunakan delay kecil agar tidak diciduk sebagai robot saat pindah halaman
+                time.sleep(random.uniform(0.5, 1.5))
+                html_redaksi = resilient_download(target, timeout=10, max_retries=1, target="google", silent=True)
                 if not html_redaksi: continue
                 
                 page_soup = BeautifulSoup(html_redaksi, 'html.parser')
+                is_it_profile = any(kw in target.lower() for kw in ['redaksi', 'tentang', 'about', 'contact', 'readstatik', 'profil'])
                 
-                # v5.39: Sniff menggunakan helper Genius (mendukung Table, TR, List, dan CF Bypass)
-                is_it_profile = any(kw in target.lower() for kw in ['redaksi', 'tentang', 'about', 'contact', 'readstatik'])
-                sub_page_text += sniff_contact_and_editorial_board(page_soup, is_profile_page=is_it_profile)
+                # Ekstrak info
+                sniffed = sniff_contact_and_editorial_board(page_soup, is_profile_page=is_it_profile)
+                if sniffed and sniffed not in sub_page_text:
+                    sub_page_text += f"\n--- INFO DARI {target.upper()} ---\n{sniffed}"
+                    
+                # Jika sudah dapat nomor WA/Telp, bisa berhenti lebih cepat (efisiensi)
+                if any(c in sub_page_text for c in ['+62', '081', 'wa.me']):
+                    # Tapi tetap lanjut jika belum ada info redaksi
+                    if len(sub_page_text) > 1000: break
             except: 
                 continue
             
         if sub_page_text:
-            contact_text += "\n[PROFIL REDAKSI PORTAL - BUKAN PENULIS SPESIFIK BERITA INI]:\n" + sub_page_text
+            contact_text += "\n[PROFIL REDAKSI & KONTAK MEDIA]:\n" + sub_page_text
         
         return contact_text.strip()
         
@@ -1647,26 +1744,46 @@ def extract_article(artikel_obj):
                 real_url = decoded
                 print(f"[+] Sniper Lapis 0 (Binary): SUCCESS -> {real_url[:50]}...")
             
-            # LAPIS 1: Resilient Head Redirect
+            # LAPIS 1: Huksley Edition (googlenewsdecoder / BatchExecute Sniper) - PRIORITAS UTAMA
             if "news.google.com" in real_url:
                 try:
-                    time.sleep(random.uniform(1, 3))
-                    res = SEARCH_SESSION.head(real_url, headers=get_human_headers(mode="mobile"), timeout=12, allow_redirects=True, verify=False)
+                    if new_decoderv1:
+                        # v6.00: Decode instan sebelum mencoba redirect berat
+                        decoded = new_decoderv1(real_url, interval=random.randint(1, 3))
+                        if decoded.get("status") and decoded.get("decoded_url"):
+                            new_link = decoded["decoded_url"]
+                            if "google.com" not in new_link:
+                                real_url = new_link
+                                print(f"[+] Sniper Lapis 1 (Huksley): SUCCESS -> {real_url[:50]}...")
+                    else:
+                        decoded_lib = resolve_google_news_url_dotsplash(real_url)
+                        if decoded_lib and "google.com" not in decoded_lib:
+                            real_url = decoded_lib
+                            print(f"[+] Sniper Lapis 1 (Dots): SUCCESS -> {real_url[:50]}...")
+                except Exception as e:
+                    print(f"[-] Sniper Lapis 1 Error (Huksley): {str(e)[:40]}")
+
+            # LAPIS 2: Resilient Head Redirect
+            if "news.google.com" in real_url:
+                try:
+                    time.sleep(random.uniform(0.5, 1.5))
+                    res = SEARCH_SESSION.head(real_url, headers=get_human_headers(mode="mobile"), timeout=10, allow_redirects=True, verify=False)
                     if "google.com" not in res.url:
                         real_url = res.url
-                        print(f"[+] Sniper Lapis 1 (Head): SUCCESS -> {real_url[:50]}...")
+                        print(f"[+] Sniper Lapis 2 (Head): SUCCESS -> {real_url[:50]}...")
                 except: pass
             
-            # LAPIS 2: ATOMIC BROWSER FALLBACK (Playwright) - Prioritas Tinggi
+            # LAPIS 3: ATOMIC BROWSER FALLBACK (Playwright)
             if "news.google.com" in real_url:
                 atomic_link = resolve_google_news_url_playwright(real_url)
                 if atomic_link:
                     real_url = atomic_link
+                    print(f"[+] Sniper Lapis 3 (Playwright): SUCCESS -> {real_url[:50]}...")
 
-            # LAPIS 3: Deep DOM Sniffer (JS/Meta/JSON-LD)
+            # LAPIS 4: Deep DOM Sniffer (JS/Meta/JSON-LD)
             if "news.google.com" in real_url:
                 try:
-                    res_body = SEARCH_SESSION.get(real_url, headers=get_human_headers(mode="desktop"), timeout=15, verify=False)
+                    res_body = SEARCH_SESSION.get(real_url, headers=get_human_headers(mode="desktop"), timeout=12, verify=False)
                     if res_body.status_code == 200:
                         patterns = [
                             r'url=["\']?(https?://[^"\' >]+)', # Meta Refresh
@@ -1681,27 +1798,9 @@ def extract_article(artikel_obj):
                                 found = m.group(1).split('\\')[0].split('"')[0].split("'")[0].split("&amp;")[0].strip()
                                 if len(found) > 15 and "google.com" not in found:
                                     real_url = found
-                                    print(f"[+] Sniper Lapis 3 (DOM): SUCCESS -> {real_url[:50]}...")
+                                    print(f"[+] Sniper Lapis 4 (DOM): SUCCESS -> {real_url[:50]}...")
                                     break
                 except: pass
-            
-            # LAPIS 4: Huksley Edition (googlenewsdecoder / BatchExecute Sniper)
-            if "news.google.com" in real_url:
-                try:
-                    if new_decoderv1:
-                        decoded = new_decoderv1(real_url, interval=random.randint(2, 5))
-                        if decoded.get("status") and decoded.get("decoded_url"):
-                            new_link = decoded["decoded_url"]
-                            if "google.com" not in new_link:
-                                real_url = new_link
-                                print(f"[+] Sniper Lapis 4 (Huksley): SUCCESS -> {real_url[:50]}...")
-                    else:
-                        decoded_lib = resolve_google_news_url_dotsplash(real_url)
-                        if decoded_lib and "google.com" not in decoded_lib:
-                            real_url = decoded_lib
-                            print(f"[+] Sniper Lapis 4 (Dots): SUCCESS -> {real_url[:50]}...")
-                except Exception as e:
-                    print(f"[-] Sniper Lapis 4 Error: {str(e)[:40]}")
             
             # LAPIS 5: GENIUS SEARCH FALLBACK (DoH Sniper)
             if "news.google.com" in real_url:

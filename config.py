@@ -1,23 +1,23 @@
 import os
 
 # Konfigurasi HuggingFace Token (v5.65)
-os.environ["HF_TOKEN"] = "PLACEHOLDER_HF_TOKEN"
+os.environ["HF_TOKEN"] = "MASKED_TOKEN"
 
 # Konfigurasi Telegram
-TELEGRAM_BOT_TOKEN = "PLACEHOLDER_TOKEN"
-TELEGRAM_CHAT_ID = "PLACEHOLDER_ID"
+TELEGRAM_BOT_TOKEN = "MASKED_TOKEN"
+TELEGRAM_CHAT_ID = "MASKED_ID"
 
-TELEGRAM_BOT_TOKEN_2 = "PLACEHOLDER_TOKEN_2"
-TELEGRAM_CHAT_ID_2 = "PLACEHOLDER_ID_2"
+TELEGRAM_BOT_TOKEN_2 = "MASKED_TOKEN"
+TELEGRAM_CHAT_ID_2 = "MASKED_ID"
 
 # API Key Google Gemini
-GEMINI_API_KEY = "PLACEHOLDER_KEY"
+GEMINI_API_KEY = "MASKED_KEY"
 
 # API Key OpenRouter (Gunakan Model Qwen / Llama Gratis)
-OPENROUTER_API_KEY = "PLACEHOLDER_KEY"
+OPENROUTER_API_KEY = "MASKED_KEY"
 
 # API Key Groq (30 RPM, 14.400 RPD - Super Cepat & Longgar)
-GROQ_API_KEY = "PLACEHOLDER_KEY"
+GROQ_API_KEY = "MASKED_KEY"
 
 # Daftar Model Groq untuk Rotasi (Menghindari 429)
 GROQ_MODELS = [
@@ -172,20 +172,20 @@ PRIORITY_KATA_KUNCI = [
     # MBG & SPPG
     "makan bergizi gratis", "mbg", "keracunan mbg", "sppg",
     # Koperasi & Jembatan
-    "koperasi merah putih", "koperasi", "proyek jembatan",
+    "koperasi merah putih", "koperasi", "proyek jembatan", "jembatan",
     # TNI & Aparat (Sniper Mode)
-    "TNI", "oknum TNI", "TNI bermasalah", "TNI viral",
-    "prajurit tni", "pengeroyokan tni", "insiden tni",
-    "keluarga TNI", "istri TNI", "batalyon", "militer",
+    "TNI", "oknum TNI", "oknum", "TNI viral",
+    "prajurit tni", "pengeroyokan tni",
+    "keluarga TNI", "istri TNI", "batalyon", "militer", "komandan", "proyek tni",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
     "TNI cerai", "TNI gugat cerai",
     # 2. Isu LGBT
-    "TNI LGBT", "tentara LGBT", "TNI gay",
+    "tentara LGBT", "TNI gay",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "resepsi mewah tentara", "pesta pernikahan TNI",
+    "pernikahan mewah TNI", "resepsi mewah tentara",
     # 4. Medsos Keluarga
-    "viral istri TNI", "viral keluarga TNI", "TNI pamer"
+    "istri TNI viral", "viral keluarga TNI", "TNI pamer"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota

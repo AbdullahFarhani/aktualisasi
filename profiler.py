@@ -24,9 +24,13 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     
     # PERINTAH KRITIS (ZERO-TRUST):
     1. LUPAKAN seluruh data jurnalis, portal, atau aktor dari berita-berita sebelumnya.
-    2. JANGAN PERNAH MENULIS PLACEHOLDER seperti [Nama], [Tanggal], dsb.
-    3. JIKA DATA TIDAK DITEMUKAN, tulis 'Informasi Nihil'.
-    4. EKSTRAKSI KONTAK (WAJIB): Cari nomor telepon, nomor WhatsApp, email, dan alamat fisik dari 'INFORMASI HALAMAN KONTAK'. UTAMAKAN NOMOR WHATSAPP/TELEPON!
+    2. JANGAN PERNAH MENULIS PLACEHOLDER seperti [Nama], [Tanggal], atau angka palsu seperti 081..., 021...
+    3. JANGAN PERNAH menulis kata 'Informasi Nihil', 'Tidak ditemukan', 'Unknown', dsb.
+    4. JIKA DATA TIDAK DITEMUKAN PADA KUNCI TERTENTU, KOSONGKAN SAJA NILAINYA (empty string "").
+    5. EKSTRAKSI KONTAK (SANGAT PENTING): 
+       - HANYA ambil nomor WhatsApp/Telepon AKTUAL (Contoh: 081..., +62..., 021...).
+       - JANGAN PERNAH mengarang nomor telepon atau menggunakan pola 081.../021... jika data tidak ada.
+       - JANGAN PERNAH mengambil link WhatsApp Channel atau link Share.
     
     # DATA HASIL PERAYAPAN:
     JUDUL BERITA: {judul}
@@ -40,11 +44,15 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v5.99):
-    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan berita nasional murni.
-    2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif terselubung: Kekecewaan publik, kegagalan program (mbg, jembatan, koperasi), pelanggaran disiplin oknum TNI (cerai, lgbt, flexing), dan inefisiensi birokrasi.
-    3. PROFILING MEDIA (DEEP SCAN): Ekstrak Nama Laman, Alamat Fisik, Jajaran Redaksi, dan KONTAK (WhatsApp, Telepon, Email). WhatsApp adalah PRIORITAS UTAMA.
-    4. IDENTIFIKASI AKTOR: Pisahkan antara Aktor Berita (Pelaku/Korban) dengan Kru Media (Reporter/Editor). Gunakan 'METADATA AKTOR' sebagai referensi utama kru media.
+    # TUGAS ANALISIS INTELIJEN (v6.42):
+    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
+    2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada MBG, Koperasi Merah Putih, Batalyon/TNI bermasalah, oknum, cerai anggota, LGBT, dan kemewahan.
+    3. PROFILING LAMAN (GENIUS SCAN):
+       - Nama Laman: Nama portal media.
+       - Alamat Laman: Alamat kantor fisik (jika ada).
+       - Jajaran Redaksi: Nama-nama Pemred, Redaktur, Editor, dsb.
+       - Kontak Laman: HANYA NOMOR AKTUAL (WA: [Kosongkan Jika Tidak Ada], Telp: [Kosongkan Jika Tidak Ada], Email: [Kosongkan Jika Tidak Ada]).
+    4. IDENTIFIKASI AKTOR: Pisahkan Aktor Berita vs Kru Media.
     
     KEMBALIKAN JSON (STRICT FORMAT):
     {{
@@ -53,10 +61,10 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
         "actors_involved": "Nama Tokoh (Peran), Nama (Reporter), Nama (Editor)",
         "contact_and_address": {{
             "nama_laman": "Nama Media",
-            "alamat": "Alamat Lengkap",
-            "redaksi": "Jajaran Redaksi Lengkap",
-            "kontak": "WhatsApp: [No], Telp: [No], Email: [Email]",
-            "info_lain": "Informasi profiling lainnya"
+            "alamat": "Alamat Kantor",
+            "redaksi": "Daftar Redaksi Lengkap",
+            "kontak": "WA: , Telp: , Email: ",
+            "info_lain": "Informasi tambahan penting"
         }},
         "fakta_5w1h": "Analisis fakta mendalam (2-3 Paragraf)"
     }}

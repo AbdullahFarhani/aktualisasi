@@ -14,26 +14,31 @@ def kirim_notifikasi_telegram(judul, tautan, laman, aktor, kontak, w5_h1):
     pesan += f"Sumber : {tautan}\n"
     
     # 2. Aktor Berita (Tokoh/Reporter/Editor)
-    aktor_str = str(aktor) if aktor else "Informasi Nihil"
-    pesan += f"{aktor_str}\n\n"
+    if aktor and not any(f in str(aktor).lower() for f in ['informasi nihil', 'gagal parsing']):
+        pesan += f"{aktor}\n\n"
     
-    # 3. Profiling Laman (v5.88: Strict Structured Formatting)
+    # 3. Profiling Laman (v6.23: Dynamic Masking)
     if isinstance(kontak, dict):
-        p_nama = kontak.get('nama_laman', laman or 'Informasi Nihil')
-        p_alamat = kontak.get('alamat', 'Informasi Nihil')
-        p_redaksi = kontak.get('redaksi', 'Informasi Nihil')
-        p_kontak = kontak.get('kontak', 'Informasi Nihil')
+        p_nama = kontak.get('nama_laman', laman)
+        p_alamat = kontak.get('alamat', '')
+        p_redaksi = kontak.get('redaksi', '')
+        p_kontak = kontak.get('kontak', '')
         p_lain = kontak.get('info_lain', '')
 
-        pesan += f"Nama Laman: {p_nama}\n"
-        pesan += f"Alamat: {p_alamat}\n"
-        pesan += f"Redaksi: {p_redaksi}\n"
-        pesan += f"Kontak: {p_kontak}\n"
-        if p_lain and p_lain.lower() != 'informasi nihil':
-            pesan += f"Info Lain: {p_lain}\n"
+        def is_valid(val):
+            if not val: return False
+            forbidden = ['informasi nihil', 'tidak ditemukan', 'unknown', 'nihil', 'n/a']
+            return not any(f in str(val).lower() for f in forbidden)
+
+        if is_valid(p_nama): pesan += f"Nama Laman: {p_nama}\n"
+        if is_valid(p_alamat): pesan += f"Alamat: {p_alamat}\n"
+        if is_valid(p_redaksi): pesan += f"Redaksi: {p_redaksi}\n"
+        if is_valid(p_kontak): pesan += f"Kontak: {p_kontak}\n"
+        if is_valid(p_lain): pesan += f"Info Lain: {p_lain}\n"
     else:
         # Fallback jika AI mengembalikan string
-        pesan += f"{kontak if kontak else 'Informasi Profiling Nihil'}\n"
+        if kontak and not any(f in str(kontak).lower() for f in ['informasi nihil', 'tidak ditemukan']):
+            pesan += f"{kontak}\n"
     
     pesan += "\n"
     
