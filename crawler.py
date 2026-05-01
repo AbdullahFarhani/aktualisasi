@@ -15,7 +15,7 @@ from config import GNEWS_LANGUAGE, GNEWS_COUNTRY, GNEWS_PERIOD
 FRASA_POSITIF_REJECT = r"(sukses|berhasil|penghargaan|bebas dari|meraih|terbukti tidak|aman|damai|lancar|kondusif|bantuan|sumbangan|apresiasi|meningkat|positif|juara|bangga|prestasi|piala|liga|pertandingan|skor|atlet|turnamen|konser|musik|film|artis|hiburan|selebriti|wisata|kuliner|hotel|promosi|diskon|wisuda|hari jadi|ulang tahun|hari ulang tahun|peresmian|sholawat|shalawat|pengajian|pengukuhan|pesta|festival|pameran|bazar|fashion|kecantikan|lifestyle|gaya hidup|arema|persebaya|bonek|aremania|sepak bola|sepakbola|futsal|stadion|suporter|klub|derby|pelatih|latihan|pertandingan)"
 # POLA_ANCAMAN: Fokus pada insiden, tindak pidana, konflik, kerawanan, krisis logistik, dan kegagalan sistem
 POLA_ANCAMAN = r"(korup|suap|gratifikasi|pungli|ilegal|kriminal|terseret|tipu|kasus|tersangka|terdakwa|vonis|tangkap|adili|tuntut|gerebek|sita|razia|demo|unjuk rasa|rusuh|amuk|konflik|sengketa|tawur|keroyok|bacok|bunuh|tewas|narkoba|buron|ciduk|rugi|palsu|teror|makar|senjata|bom|ledak|hoaks|provokasi|geruduk|kepung|hukum|perkosa|cabul|curi|maling|ringsek|tabrak|mati|pidana|ancaman|separatis|radikal|sabotase|penculikan|penyekapan|begal|rampok|bajak|tak layak konsumsi|basi|bau|keracunan|muntah|sakit|dikembalikan|busuk|berulat|beracun|bingung|tak punya kendali|tak tahu|terbengkalai|sia-sia|mubazir|tak berfungsi|rusak|mangkrak|kecewa|protes|tolak|masalah|kendala|salah sasaran|keliru|tidak tepat|tak beroperasi|cerai|gugat|lgbt|gay|homo|lesbian|pamer|flexing|mewah|pesta|resepsi|selingkuh|zina|hina|hujat|bully|oknum|indisipliner|sanksi|pecat|pecat tni)"
-# FRASA_REJECT_NASIONAL: Menghalau berita nasional/internasional murni agar tidak lolos hanya karena dimuat media AreaX
+# FRASA_REJECT_NASIONAL: Menghalau berita nasional/internasional murni agar tidak lolos hanya karena dimuat media Jatim
 FRASA_REJECT_NASIONAL = r"(trump|biden|putin|zelensky|xi jinping|netanyahu|iran|israel|gaza|lebanon|palestina|ukraina|rusia|timur tengah|laut cina selatan|nato|pbb|hamas|hizbullah|jakarta|bandung|medan|makassar|ikn|nusantara|nasional|dunia|internasional|inter milan|ac milan|juventus|serie a|liga italia|liga inggris|liga spanyol|champions league|calciopoli|piala dunia|euro 202|piala asia|timnas indonesia|pssi)"
 
 # 2. Setup Deep Learning AI (IndoRoBERTa Backend PyTorch)
@@ -47,22 +47,22 @@ def is_potensi_ancaman(judul, deskripsi, strict_mode=False):
     teks = (str(judul) + " " + str(deskripsi)).lower()
     
     # --- LAPIS 0: UJI LOKASI JAWA TIMUR (v6.12: Nuanced) ---
-    from config import KABKOTA_AREAX, PRIORITY_KATA_KUNCI
+    from config import KABKOTA_JATIM, PRIORITY_KATA_KUNCI
     
     # Deteksi isu prioritas (Bypass Geofence ketat)
     isu_prioritas = any(pk.lower() in teks for pk in PRIORITY_KATA_KUNCI)
     
     # Bersihkan nama media untuk deteksi lokasi murni
     teks_murni = teks
-    media_names = ["radar jember", "radar kediri", "radar madura", "radar banyuwangi", "radar madiun", "radar tulungagung", "radar bojonegoro", "radar semeru", "radar gresik", "surya malang", "tribun areax", "radar surabaya"]
+    media_names = ["radar jember", "radar kediri", "radar madura", "radar banyuwangi", "radar madiun", "radar tulungagung", "radar bojonegoro", "radar semeru", "radar gresik", "surya malang", "tribun jatim", "radar surabaya"]
     for mn in media_names:
         teks_murni = teks_murni.replace(mn, " [MEDIA] ")
         
     lokasi_valid = False
-    if "areax" in teks or "area operasional" in teks:
+    if "jatim" in teks or "jawa timur" in teks:
         lokasi_valid = True
     else:
-        for kota in KABKOTA_AREAX:
+        for kota in KABKOTA_JATIM:
             kota_low = kota.lower()
             # Kriteria 1: Kota muncul di luar nama media (Teks Murni)
             if kota_low in teks_murni:

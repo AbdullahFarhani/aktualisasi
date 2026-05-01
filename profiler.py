@@ -24,12 +24,17 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     
     # PERINTAH KRITIS (ZERO-TRUST):
     1. LUPAKAN seluruh data jurnalis, portal, atau aktor dari berita-berita sebelumnya.
-    2. JANGAN PERNAH MENULIS PLACEHOLDER seperti [Nama], [Tanggal], atau angka palsu seperti 081..., 021...
+    2. JANGAN PERNAH MENULIS PLACEHOLDER seperti Nama, Tanggal, atau angka palsu seperti 081..., 021...
     3. JANGAN PERNAH menulis kata 'Informasi Nihil', 'Tidak ditemukan', 'Unknown', dsb.
     4. JIKA DATA TIDAK DITEMUKAN PADA KUNCI TERTENTU, KOSONGKAN SAJA NILAINYA (empty string "").
-    5. EKSTRAKSI KONTAK (SANGAT PENTING): 
+    5. JANGAN PERNAH gunakan kurung siku [] pada nilai output akhir.
+    6. EKSTRAKSI KONTAK (SANGAT PENTING): 
        - HANYA ambil nomor WhatsApp/Telepon AKTUAL (Contoh: 081..., +62..., 021...).
-       - JANGAN PERNAH mengarang nomor telepon atau menggunakan pola 081.../021... jika data tidak ada.
+       - JANGAN PERNAH mengarang nomor telepon. 
+       - JANGAN PERNAH mengambil angka dari URL, Tanggal Berita, atau Kode Pos sebagai nomor telepon/WA.
+       - JANGAN PERNAH mengisi nomor dengan angka berulang seperti +202020... atau 020202... jika data tidak ada.
+       - JIKA TERDAPAT BANYAK NOMOR: Utamakan nomor yang berlabel "Redaksi" atau "WhatsApp".
+       - ABAIKAN nomor yang berlabel "Fax" atau "Faks".
        - JANGAN PERNAH mengambil link WhatsApp Channel atau link Share.
     
     # DATA HASIL PERAYAPAN:
@@ -44,12 +49,12 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v6.92):
-    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di AreaX. Abaikan olahraga, gosip, dan hiburan.
+    # TUGAS ANALISIS INTELIJEN (v7.00):
+    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
     2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada prioritas: mbg, koperasi merah putih, batalyon bermasalah, cerai anggota tni, lgbt tni, nikah mewah tni, tni bermasalah, oknum tni, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah dengan tni.
     3. PROFILING LAMAN (GENIUS SCAN - CARI SAMPAI DAPAT):
        - Halaman seperti "redaksi", "kontak", "tentang kami", footer, header, dan body laman harus dicari teliti.
-       - Kontak Laman: NOMOR TELEPON ATAU NOMOR WA (WAJIB UTAMAKAN MENDAPATKAN NOMOR TELEPON ATAUPUN NOMOR WA). Ekstrak dari teks secara teliti.
+       - Kontak Laman: HANYA ISI jika ditemukan nomor telepon/WA/Email yang valid di teks sumber. Jika tidak ada, biarkan "".
     4. IDENTIFIKASI AKTOR: Pisahkan Aktor Berita vs Kru Media.
     
     KEMBALIKAN JSON (STRICT FORMAT):
@@ -58,11 +63,11 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
         "is_in_east_java": true/false,
         "actors_involved": "Nama Tokoh (Peran), Nama (Reporter), Nama (Editor)",
         "contact_and_address": {{
-            "nama_laman": "Isi dengan Nama Laman",
-            "alamat_laman": "Isi dengan Alamat Laman",
-            "jajaran_redaksi_laman": "Isi dengan Jajaran Redaksi",
-            "kontak_laman": "Isi dengan Nomor Telepon: [No], Nomor WA: [No], Email: [Email]. UTAMAKAN NOMOR WA/TELEPON!",
-            "informasi_profiling_laman_lainnya": "Isi dengan Informasi Profiling Lainnya"
+            "nama_laman": "Nama Laman",
+            "alamat_laman": "Alamat Laman",
+            "jajaran_redaksi_laman": "Jajaran Redaksi",
+            "kontak_laman": "Nomor Telepon: (No), Nomor WA: (No), Email: (Email)",
+            "informasi_profiling_laman_lainnya": "Informasi Profiling Lainnya"
         }},
         "fakta_5w1h": "Analisis fakta mendalam (2-3 Paragraf)"
     }}

@@ -28,15 +28,15 @@ GROQ_MODELS = [
 ]
 
 # Data Geografis
-KABKOTA_AREAX = [
-    "Kota A", "Kota B", "Kota C", "Kota D", "Kota E", "Kota F", 
-    "Kota G", "Kota H", "Kota I", "Kota J", "Kota K", "Kota L", "Kota M", 
-    "Kota N", "Kota O", "Kota P", "Kota Q", "Kota R", "Kota S", "Kota T", 
-    "Kota U", "Kota V", "Kota W", "Kota X", "Kota Y", "Kota Z", 
-    "Kota AA", "Kota AB", "Kota AC", "Kota AD", "Ibu Kota Area", "Area Operasional"
+KABKOTA_JATIM = [
+    "Bangkalan", "Banyuwangi", "Blitar", "Bojonegoro", "Bondowoso", "Gresik", 
+    "Jember", "Jombang", "Kediri", "Lamongan", "Lumajang", "Madiun", "Magetan", 
+    "Malang", "Mojokerto", "Nganjuk", "Ngawi", "Pacitan", "Pamekasan", "Pasuruan", 
+    "Ponorogo", "Probolinggo", "Sampang", "Sidoarjo", "Situbondo", "Sumenep", 
+    "Trenggalek", "Tuban", "Tulungagung", "Batu", "Surabaya", "Jawa Timur"
 ]
 
-# Wilayah Perbatasan & Kota Besar yang WAJIB Ditolak (Luar Area Operasional) - v5.35
+# Wilayah Perbatasan & Kota Besar yang WAJIB Ditolak (Luar Jawa Timur) - v5.35
 REJECTED_REGIONS = [
     # Jawa Tengah & DIY
     "Blora", "Cepu", "Randublatung", "Sragen", "Solo", "Surakarta",
@@ -72,14 +72,14 @@ REJECTED_REGIONS = [
 ]
 
 # Kata kunci geografis yang memicu PENOLAKAN INSTAN (Ultra-Geofence) - v5.35
-# HANYA untuk frasa yang PASTI 100% bukan Area Operasional dan TIDAK MUNGKIN muncul sbg cross-report
-# (Mis: Jakarta Selatan bisa muncul di berita KPK tentang AreaX, jadi masuk REJECTED_REGIONS saja)
+# HANYA untuk frasa yang PASTI 100% bukan Jawa Timur dan TIDAK MUNGKIN muncul sbg cross-report
+# (Mis: Jakarta Selatan bisa muncul di berita KPK tentang Jatim, jadi masuk REJECTED_REGIONS saja)
 FORBIDDEN_KEYWORDS = [
-    # Bali (tidak mungkin cross-report dengan AreaX secara lokasi)
-    "Kuta Bali", "Badung Bali", "Kota ADriti",
+    # Bali (tidak mungkin cross-report dengan Jatim secara lokasi)
+    "Kuta Bali", "Badung Bali", "Baturiti",
     # DIY (sangat spesifik, tidak mungkin salah sangka)
     "Daerah Istimewa Yogyakarta", "Provinsi DIY",
-    # Tokoh Nasional (Jika tanpa konteks AreaX yang kuat - v5.49)
+    # Tokoh Nasional (Jika tanpa konteks Jatim yang kuat - v5.49)
     "Polda Metro Jaya", "Mabes Polri", "Uya Kuya", "Artis Ibu Kota",
     "Kabupaten Gunungkidul", "Kabupaten Sleman", "Kabupaten Bantul",
     "Kabupaten Kulon Progo", "Kota Yogyakarta",
@@ -159,7 +159,7 @@ FORBIDDEN_KEYWORDS = [
 #     "oplosan",
 #     "sesat",
 #     "radikalisme",
-# v5.89: Reguler Ancaman AreaX (Optimized to 19)
+# v5.89: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
     "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
     "sampah", "KDRT", "aparat", 
@@ -176,22 +176,22 @@ PRIORITY_KATA_KUNCI = [
     # Demonstrasi & Konsolidasi
     "demo", "unjuk rasa", "aksi damai", "konsolidasi",
     # TNI & Aparat (Sniper Mode)
-    "TNI", "oknum TNI", "oknum", "TNI viral", "tni bermasalah",
-    "prajurit tni", "pengeroyokan tni",
+    "TNI", "oknum TNI", "oknum", "TNI viral",
+    "prajurit tni", "tentara",
     "keluarga TNI", "istri TNI", "batalyon", "militer", "komandan", "proyek tni",
-    # --- ARAHAN PANGLIMA (Trending Pimpinan) ---
+    # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "TNI cerai", "TNI gugat cerai", "rencana cerai anggota tni",
+    "TNI cerai", "TNI gugat cerai",
     # 2. Isu LGBT
-    "tentara LGBT", "TNI gay", "isu tni lgbt",
+    "TNI gay", "isu tni",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "resepsi mewah tentara", "pernikahan mewah tni",
+    "pernikahan mewah TNI", "resepsi mewah tentara",
     # 4. Medsos Keluarga
-    "istri TNI viral", "viral keluarga TNI", "TNI pamer"
+    "TNI pamer", "TNI flexing"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota
-# Misal: "pupuk ilegal Kota A"
+# Misal: "pupuk ilegal Bangkalan"
 
 # Konfigurasi Crawling
 GNEWS_LANGUAGE = 'id'

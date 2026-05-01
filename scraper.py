@@ -12,6 +12,7 @@ import urllib3
 # Matikan peringatan SSL Insecure jika terpaksa bypass ISP
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from config import GROQ_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, USE_CLOUDFLARE_DNS, USE_PROXY, PROXY_SETTING, USE_AUTO_HARVESTER, USE_PLAYWRIGHT
+import traceback
 try:
     from googlenewsdecoder import new_decoderv1
 except ImportError:
@@ -249,8 +250,28 @@ def resilient_download_playwright(url, timeout=20, target="generic"):
                 # Akses dengan timeout lebih longgar untuk Lapis 2
                 resp = page.goto(url, wait_until="domcontentloaded", timeout=timeout*1000)
                 
+                # v6.95: FULL PAGE SCROLLING (Jangan setengah-setengah)
+                print(f"[*] Sniper Scrolling Layer: Menjelajahi halaman hingga dasar...")
+                page.evaluate("""
+                    async () => {
+                        await new Promise((resolve) => {
+                            let totalHeight = 0;
+                            let distance = 300;
+                            let timer = setInterval(() => {
+                                let scrollHeight = document.body.scrollHeight;
+                                window.scrollBy(0, distance);
+                                totalHeight += distance;
+                                if(totalHeight >= scrollHeight){
+                                    clearInterval(timer);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+                """)
+                
                 # Jeda agar script proteksi bot (jika ada) selesai dieksekusi
-                page.wait_for_timeout(random.randint(2000, 4000))
+                page.wait_for_timeout(random.randint(1500, 3000))
                 
                 content = page.content()
                 browser.close()
@@ -297,6 +318,13 @@ def resilient_download(url, timeout=12, max_retries=2, target="generic", silent=
                     print(f"[*] JS Challenge terdeteksi (Cloudflare/WAF)! Mencoba Lapis 2...")
                     pw_content = resilient_download_playwright(url, timeout=timeout, target=target)
                     if pw_content: return pw_content
+
+                # v6.96: Jika konten terlalu pendek (mungkin halaman blokir/please wait), paksa Playwright
+                if response.status_code == 200 and len(response.text) < 1500 and target == "google":
+                    print(f"[*] Sniper Warning: Konten {url[:40]}... terlalu pendek ({len(response.text)} bytes). Mencoba Playwright...")
+                    if USE_PLAYWRIGHT:
+                        pw_content = resilient_download_playwright(url, timeout=timeout, target=target)
+                        if pw_content: return pw_content
                 
                 return decode_spa_html(response.text)
             elif response.status_code == 429:
@@ -409,7 +437,7 @@ def resilient_download_full(url, timeout=12, max_retries=2, target="generic"):
         
     return main_html
 
-# Kata kunci untuk mencari halaman profil/redaksi (v5.66: Ekspansi patterns)
+# Kata kunci untuk mencari halaman profil/redaksi (v6.94: Giga-Intel v2)
 KATA_KUNCI_PROFIL = [
     'redaksi', 'kontak', 'hubungi', 'contact', 'tentang', 'about', 
     'susunan', 'tim editorial', 'crew', 'person', 'editorial team',
@@ -417,7 +445,11 @@ KATA_KUNCI_PROFIL = [
     'corporate', 'informasi', 'bantuan', 'pusat bantuan', 'boks redaksi',
     'pedoman', 'visi-misi', 'sop', 'iklan', 'indeks', 'hak-jawab', 'struktur',
     'organisasi', 'biro', 'perwakilan', 'alamat', 'location', 'kode etik',
-    'privacy policy', 'kebijakan privasi', 'karir', 'career', 'peta situs', 'sitemap'
+    'privacy policy', 'kebijakan privasi', 'karir', 'career', 'peta situs', 'sitemap',
+    'management', 'board', 'team', 'staff', 'offices', 'locations', 'reach us', 
+    'get in touch', 'write to us', 'pimpinan', 'pengurus', 'kontributor',
+    'redaksional', 'redaksi |', 'kontak kami |', 'boks-redaksional', 'box redaksi', 'surya', 'surya.co.id',
+    'pedoman siber', 'disclaimer', 'iklan', 'advertise', 'media kit', 'newsroom'
 ]
 
 def ekstrak_halaman_redaksi_global(soup, base_url):
@@ -475,11 +507,11 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, "https://madu.tv/kontak/")
         potensial_links.insert(0, "https://madu.tv/struktur-dalam-media-madutv-nusantara/")
         potensial_links.insert(0, "https://madu.tv/profil-madu-tv/")
-    # Tagar AreaX
-    elif 'tagarareax.id' in base_domain:
-        potensial_links.insert(0, "https://tagarareax.id/redaksi-tagar-areax/")
-        potensial_links.insert(0, "https://tagarareax.id/tentang-tagar-areax/")
-    # Kabar Ibu Kota Area (Blogspot-style)
+    # Tagar Jatim
+    elif 'tagarjatim.id' in base_domain:
+        potensial_links.insert(0, "https://tagarjatim.id/redaksi-tagar-jatim/")
+        potensial_links.insert(0, "https://tagarjatim.id/tentang-tagar-jatim/")
+    # Kabar Surabaya (Blogspot-style)
     elif 'kabarsurabaya.org' in base_domain:
         potensial_links.insert(0, "https://www.kabarsurabaya.org/2021/10/susunan-redaksi-kabar-surabaya.html")
         potensial_links.insert(0, "https://www.kabarsurabaya.org/p/hubungi-kami.html")
@@ -497,10 +529,10 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, f"https://{sub}/kontak")
         potensial_links.insert(0, f"https://{sub}/redaksi")
         potensial_links.insert(0, f"https://{sub}/about-us")
-    # KlikAreaX
-    elif 'klikareax.com' in base_domain:
-        potensial_links.insert(0, "https://klikareax.com/pages/kontak-kami")
-        potensial_links.insert(0, "https://klikareax.com/pages/redaksi")
+    # KlikJatim
+    elif 'klikjatim.com' in base_domain:
+        potensial_links.insert(0, "https://klikjatim.com/pages/kontak-kami")
+        potensial_links.insert(0, "https://klikjatim.com/pages/redaksi")
     # Realita.co
     elif 'realita.co' in base_domain:
         potensial_links.insert(0, "https://realita.co/pages/tentang-kami")
@@ -517,12 +549,12 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, f"https://{sub}/readstatik/115/kontak")
         potensial_links.insert(0, f"https://{sub}/readstatik/1/redaksi")
         potensial_links.insert(0, f"https://{sub}/readstatik/2/tentang-kami")
-    # BuserAreaX
-    elif 'buserareax.com' in base_domain:
-        potensial_links.insert(0, "https://buserareax.com/box-redaksi/")
+    # BuserJatim
+    elif 'buserjatim.com' in base_domain:
+        potensial_links.insert(0, "https://buserjatim.com/box-redaksi/")
     # Tribunnews Regional
     elif 'tribunnews.com' in base_domain:
-        sub = parsed_base.netloc  # e.g. areax.tribunnews.com
+        sub = parsed_base.netloc  # e.g. jatim.tribunnews.com
         if sub != 'www.tribunnews.com':
             potensial_links.insert(0, f"https://{sub}/contact-us/")
             potensial_links.insert(0, f"https://{sub}/redaksi/")
@@ -532,13 +564,13 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, "https://www.jpnn.com/page/tentang-kami")
         potensial_links.insert(0, "https://www.jpnn.com/page/redaksi")
     # === v5.76: Domain Baru dari Evaluasi ===
-    # Kota I Tangguh
+    # Kediri Tangguh
     elif 'kediritangguh.co' in base_domain:
         potensial_links.insert(0, "https://kediritangguh.co/tentang-kami/")
-    # Jurnal AreaX
-    elif 'jurnalareax.com' in base_domain:
-        potensial_links.insert(0, "https://jurnalareax.com/tentang-kami/")
-        potensial_links.insert(0, "https://jurnalareax.com/redaksi/")
+    # Jurnal Jatim
+    elif 'jurnaljatim.com' in base_domain:
+        potensial_links.insert(0, "https://jurnaljatim.com/tentang-kami/")
+        potensial_links.insert(0, "https://jurnaljatim.com/redaksi/")
     # TargetNews
     elif 'targetnews.id' in base_domain:
         potensial_links.insert(0, "https://targetnews.id/redaksi/")
@@ -653,7 +685,7 @@ def bersihkan_konten_kontak(teks):
 # Kata kunci yang relevan isi teks kontak profil (v5.32: Diperluas ke Jakarta/Global)
 KATA_KUNCI_KONTEN = [
     'jalan', 'jl.', 'jl ', '@', '(at)', '[at]', '08', '+62', '031', '033', '034', '035', '032', '036', '021', 'telp', 'fax', 'email', 
-    'redaksi:', 'wa:', 'kontak:', 'telepon:', 'whatsapp:', 'pusat berita', 'hotline', 'dewan pers', 'verifikasi', 'faktual',
+    'redaksi', 'wa:', 'kontak', 'telepon', 'whatsapp', 'pusat berita', 'hotline', 'dewan pers', 'verifikasi', 'faktual',
     'redaksi', 'editor', 'wartawan', 'reporter', 'pemimpin', 'direktur', 'penanggung jawab', 'penerbit', 'wa ', 'whatsapp', 
     'hubungi', 'kramat pela', 'selatan', 'jakarta', 'mediakonteks', 'independenmedia', 'wa.me', 't.me',
     'komisaris', 'sekretaris', 'bendahara', 'staf', 'pimpinan', 'dewan', 'pengurus', 'petugas', 'kantor',
@@ -667,11 +699,11 @@ KANTOR_BERITA = ['antara', 'reuters', 'afp', 'ap', 'bloomberg', 'cnbc', 'bbc', '
 
 # Jaringan Media Terpercaya (Cross-Domain Mapping)
 TRUSTED_NETWORKS = {
-    'malangtimes.com': ['areaxtimes.com', 'malangtimes.com'],
+    'malangtimes.com': ['jatimtimes.com', 'malangtimes.com'],
     'radarkediri.jawapos.com': ['jawapos.com', 'radarkediri.jawapos.com', 'radarmadiun.jawapos.com'],
-    'gresiksatu.com': ['gresiksatu.com', 'klikareax.com'],
-    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunareax.com', 'suryamalang.com', 'areax.tribunnews.com', 'areax-timur.tribunnews.com'],
-    'rubicnews.com': ['rubicnews.com', 'promedia', 'areaxtimes.com'],
+    'gresiksatu.com': ['gresiksatu.com', 'klikjatim.com'],
+    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunjatim.com', 'suryamalang.com', 'jatim.tribunnews.com', 'jatim-timur.tribunnews.com'],
+    'rubicnews.com': ['rubicnews.com', 'promedia', 'jatimtimes.com'],
     'surabayapagi.com': ['surabayapagi.com'],
     'rri.co.id': ['rri.co.id'],
     'jawapos.com': [
@@ -717,7 +749,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
                     for auth in authors:
                         name = auth.get('name') if isinstance(auth, dict) else auth
                         if name and isinstance(name, str) and 3 < len(name) < 50:
-                            # v5.37: Skip nama domain (misal: 'AreaXhariini.co.id', 'Redaksi Kompas')
+                            # v5.37: Skip nama domain (misal: 'Jatimhariini.co.id', 'Redaksi Kompas')
                             if any(ext in name.lower() for ext in ['.co.id', '.com', '.net', '.id', '.org']):
                                 continue
                             if any(nb in name.lower() for nb in ['redaksi', 'admin', 'tim ', 'desk ']):
@@ -740,7 +772,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
             # Pastikan ini nama orang, bukan nama domain/website
             if '.' not in meta_content or ' ' in meta_content:  # Nama orang tidak mengandung titik tanpa spasi
                 metadata.append(f"[EDITOR BERITA (META)]: {meta_content}")
-        elif meta_name in ['content_author', 'article:author', 'dc.author'] and meta_content != 'AreaXhariini.co.id':
+        elif meta_name in ['content_author', 'article:author', 'dc.author'] and meta_content != 'Jatimhariini.co.id':
             if '.' not in meta_content or ' ' in meta_content:  # Bukan nama domain
                 if not any(kb in meta_content.lower() for kb in KANTOR_BERITA + ['redaksi', 'admin', '.co.id', '.net', '.com']):
                     metadata.append(f"[BYLINE UTAMA (META)]: {meta_content}")
@@ -764,7 +796,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
                     metadata.append(f"[BYLINE UTAMA (LINK)]: {name_text}")
 
     # v5.36 GENIUS META-BAR SCAN — Diperluas untuk menangkap berbagai format portal Indonesia
-    # Mencakup: single-author (SuaraIbu Kota Area), post-author, article-author, content-author, writer, contributor
+    # Mencakup: single-author (SuaraSurabaya), post-author, article-author, content-author, writer, contributor
     meta_elements = soup.find_all(
         ['li', 'span', 'small', 'div', 'p', 'a'],
         attrs={'class': re.compile(r'meta|author|byline|credit|reporter|single.author|post.author|article.author|content.author|writer|contributor|penulis', re.I)}
@@ -776,7 +808,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
             if not any(br in t.lower() for br in BLACKLIST_ROLES):
                 metadata.append(f"[BYLINE UTAMA]: {t}")
 
-    # v5.36: DIRECT SCAN 'Laporan oleh' — Pola umum media Indonesia (SuaraIbu Kota Area, Jawa Pos, dll)
+    # v5.36: DIRECT SCAN 'Laporan oleh' — Pola umum media Indonesia (SuaraSurabaya, Jawa Pos, dll)
     # Menangkap format: "Laporan oleh Billy Patoppoi" baik di dalam teks paragraf maupun elemen HTML
     # Negatif stop: Berhenti sebelum nama hari/bulan/kata bukan nama
     _STOP_WORDS = r'(?:senin|selasa|rabu|kamis|jumat|sabtu|minggu|januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|\d)'
@@ -932,14 +964,57 @@ def is_menu_noise(teks, is_profile_page=False):
         return True
     return False
 
+def extract_json_ld_contacts(soup):
+    """v6.93: Mengekstrak informasi kontak dari script JSON-LD (Schema.org)."""
+    contacts = []
+    scripts = soup.find_all('script', type='application/ld+json')
+    for script in scripts:
+        try:
+            data = json.loads(script.string)
+            # JSON-LD bisa berupa list atau object tunggal
+            if isinstance(data, dict): items = [data]
+            elif isinstance(data, list): items = data
+            else: continue
+            
+            for item in items:
+                # Cari tipe Organization, NewsMediaOrganization, atau ContactPoint
+                if item.get('@type') in ['Organization', 'NewsMediaOrganization', 'ContactPoint', 'LocalBusiness']:
+                    name = item.get('name', '')
+                    addr = item.get('address', {})
+                    if isinstance(addr, dict):
+                        addr_str = f"{addr.get('streetAddress', '')} {addr.get('addressLocality', '')} {addr.get('addressRegion', '')}"
+                    else: addr_str = str(addr)
+                    
+                    tel = item.get('telephone', '')
+                    email = item.get('email', '')
+                    cp = item.get('contactPoint', [])
+                    if isinstance(cp, dict): cp = [cp]
+                    
+                    for p in cp:
+                        if p.get('telephone'): contacts.append(f"JSON-LD Telp: {p.get('telephone')}")
+                        if p.get('email'): contacts.append(f"JSON-LD Email: {p.get('email')}")
+                    
+                    if name: contacts.append(f"JSON-LD Org: {name}")
+                    if addr_str.strip(): contacts.append(f"JSON-LD Alamat: {addr_str.strip()}")
+                    if tel: contacts.append(f"JSON-LD Telp: {tel}")
+                    if email: contacts.append(f"JSON-LD Email: {email}")
+        except: pass
+    return "\n".join(list(set(contacts)))
+
 def sniff_contact_and_editorial_board(soup, is_profile_page=False):
     """
-    v5.88 Helper: Pemindaian cerdas untuk kontak, alamat, dan jajaran redaksi.
-    Menggabungkan Table Sniffing, List Sniffing, dan Element Scanning.
+    v6.93 Helper: Pemindaian cerdas untuk kontak, alamat, dan jajaran redaksi.
+    Menggabungkan Table Sniffing, List Sniffing, Element Scanning, dan JSON-LD.
     """
     captured_text = ""
+    
+    # 0. v6.93: JSON-LD SCAN (Structured Data)
+    json_ld_info = extract_json_ld_contacts(soup)
+    if json_ld_info:
+        captured_text += f"[JSON-LD STRUCTURED DATA]:\n{json_ld_info}\n\n"
+
     # v6.41: Area pemindaian diperluas ke Sidebar dan Widget (Penting untuk WordPress)
-    area_penting = soup.find_all(['header', 'footer', 'main', 'article', 'div', 'aside', 'table', 'section', 'ul', 'ol', 'dl', 'address', 'sidebar', 'widget'])
+    area_penting = soup.find_all(['header', 'footer', 'main', 'article', 'div', 'aside', 'table', 'section', 'ul', 'ol', 'dl', 'address', 'sidebar', 'widget', 'body'])
     
     # 1. v5.39: CLOUDFLARE BYPASS
     for cf_node in soup.find_all(attrs={"data-cfemail": True}):
@@ -954,11 +1029,11 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
     for area in area_penting:
         area_raw = area.get_text(" ", strip=True)
         # v5.88: Pencarian keyword kontak lebih agresif
-        is_contact_block = any(skw in area_raw.lower() for skw in ['susunan redaksi', 'dewan redaksi', 'redaksi kami', 'boks redaksi', 'jajaran redaksi', 'hubungi kami', 'contact us', 'telepon', 'whatsapp', 'wa:', 'telp:'])
+        is_contact_block = any(skw in area_raw.lower() for skw in ['susunan redaksi', 'dewan redaksi', 'redaksi kami', 'boks redaksi', 'jajaran redaksi', 'hubungi kami', 'contact us', 'telepon', 'whatsapp', 'wa:', 'telp:', 'pimpinan', 'pengurus', 'redaksional', 'redaksi |', 'redaksi:', 'kontak:'])
         
-        if area.name in ['table', 'ul', 'ol', 'dl'] or (is_contact_block and area.name in ['div', 'section', 'footer']):
+        if area.name in ['table', 'ul', 'ol', 'dl', 'body'] or (is_contact_block and area.name in ['div', 'section', 'footer']):
             full_area_text = area.get_text(" ", strip=True)
-            board_kws = ['redaksi', 'pimpinan', 'dewan', 'pengurus', 'editor', 'penulis', 'direktur', 'pemred', 'manajer', 'redaktur', 'kabiro', 'telepon', 'whatsapp', 'wa:', 'telp:']
+            board_kws = ['redaksi', 'pimpinan', 'dewan', 'pengurus', 'editor', 'penulis', 'direktur', 'pemred', 'manajer', 'redaktur', 'kabiro', 'telepon', 'whatsapp', 'wa:', 'telp:', 'management', 'board', 'redaksional']
             if is_contact_block or any(kw in full_area_text.lower() for kw in board_kws):
                 teks_box = bersihkan_konten_kontak(full_area_text)
                 if 10 < len(teks_box) < 8000:
@@ -969,7 +1044,7 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
                 if area.name in ['table', 'ul', 'ol', 'dl']: continue 
 
         # 3. ELEMENT SCANNING (P, LI, TD, dsb)
-        for element in area.find_all(['p', 'address', 'li', 'td', 'span', 'div', 'b', 'strong', 'tr']):
+        for element in area.find_all(['p', 'address', 'li', 'td', 'span', 'div', 'b', 'strong', 'tr', 'a', 'i']):
             if element.name == 'div' and element.find(['p', 'div', 'span']):
                 continue
                 
@@ -984,7 +1059,20 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
                     cf_decoded = f" [Email: {email}] "
                 except: pass
 
-            teks_el = element.get_text(" ", strip=True) + cf_decoded
+            # v6.93: ICON & CLASS SCANNER (For Icon-only links)
+            icon_info = ""
+            if element.name in ['i', 'span', 'a']:
+                classes = " ".join(element.get('class', [])).lower()
+                if any(c in classes for c in ['whatsapp', 'phone', 'envelope', 'email', 'telp', 'wa-icon']):
+                    # Jika ini link, ambil href-nya
+                    parent_a = element if element.name == 'a' else element.find_parent('a', href=True)
+                    if parent_a and parent_a.get('href'):
+                        href = parent_a['href'].lower()
+                        if 'wa.me' in href or 'whatsapp' in href: icon_info = f" [WA-ICON: {href}] "
+                        elif 'tel:' in href: icon_info = f" [TEL-ICON: {href}] "
+                        elif 'mailto:' in href: icon_info = f" [MAIL-ICON: {href}] "
+
+            teks_el = element.get_text(" ", strip=True) + cf_decoded + icon_info
             # v6.31: Deteksi link WA AKTUAL (Abaikan Channel/Share)
             wa_in_el = element.find('a', href=re.compile(r'wa\.me|whatsapp', re.I))
             if wa_in_el:
@@ -993,14 +1081,28 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
                 if 'channel' not in href_wa and 'text=' not in href_wa:
                     teks_el += f" (WA: {wa_in_el['href']})"
 
-            if 8 <= len(teks_el) < 1500 and any(kw in teks_el.lower() for kw in KATA_KUNCI_KONTEN):
+            if (len(teks_el) >= 8 or icon_info) and len(teks_el) < 1500 and (any(kw in teks_el.lower() for kw in KATA_KUNCI_KONTEN) or icon_info):
                 if is_menu_noise(teks_el, is_profile_page=is_profile_page):
                     continue
                 teks_bersih = bersihkan_konten_kontak(teks_el)
                 if teks_bersih and teks_bersih not in captured_text:
                     captured_text += teks_bersih + "\n"
     
-    return captured_text
+        # 4. v6.96: LINE-BY-LINE SNIPER (For Tribun-style layouts)
+        if not captured_text or len(captured_text) < 100:
+            lines = soup.get_text("\n").split("\n")
+            for i, line in enumerate(lines):
+                line_clean = line.strip()
+                if not line_clean: continue
+                # Cari baris yang mengandung keyword redaksi/kontak
+                match_kws = ['redaksi', 'editor', 'pimpinan', 'telp', 'wa:', 'kontak', 'alamat', 'news director']
+                if any(kw in line_clean.lower() for kw in match_kws):
+                    # Ambil baris ini dan 2 baris setelahnya (konteks)
+                    context = " ".join([l.strip() for l in lines[i:i+3] if l.strip()])
+                    if len(context) > 10 and context not in captured_text:
+                        captured_text += f"[LINE-SCAN]: {context}\n"
+    
+    return captured_text.strip()
 
 def sniff_actors_and_editorial(soup, html):
     """
@@ -1065,22 +1167,27 @@ def scrape_contact_page(domain, html_content=None):
             if not html: return ""
             soup = BeautifulSoup(html, 'html.parser')
         
-        # v6.00: GIGA-AGGRESSIVE CONTACT SCANNER (Heuristic Layer)
+        # v6.96: GIGA-AGGRESSIVE CONTACT SCANNER (Heuristic Layer)
         def extract_contacts_from_text(text):
             found_contacts = []
-            # Pola: 0812..., +62 812..., (021) ..., 031-..., WA: 08...
-            pola_telp = [
-                r'(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}(?:\d{1,4})?',
-                r'08[1-9]\d{1,2}[\s\-\.]?\d{3,5}[\s\-\.]?\d{3,5}',
-                r'\(?0\d{2,3}\)?[\s\-\.]?\d{5,8}',
-                r'(?:wa|whatsapp|telp|hp|call|kontak|redaksi)\s*[:\-]?\s*(?:\+62|62|0)8[1-9][0-9\-\s]{7,15}'
-            ]
-            for p in pola_telp:
-                hits = re.findall(p, text, re.I)
-                for h in hits:
-                    clean_num = re.sub(r'\D', '', h)
-                    if 9 <= len(clean_num) <= 15:
-                        found_contacts.append(h.strip())
+            # v6.98: Filter baris yang mengandung 'Fax' agar tidak disangka Nomor Telp/WA
+            lines = text.split('\n')
+            for line in lines:
+                if any(fx in line.lower() for fx in ['fax', 'faks']): continue
+                
+                # Pola: 0812..., +62 812..., (021) ..., 031-..., WA: 08..., 031.123.456
+                pola_telp = [
+                    r'(?:\+62|62|0)(?:[2-9]\d{1,2}|\d{2,3})[\s\-\.\–\—]?\d{3,5}[\s\-\.\–\—]?\d{3,5}(?:\d{1,4})?',
+                    r'08[1-9]\d{1,2}[\s\-\.\–\—]?\d{3,5}[\s\-\.\–\—]?\d{3,5}',
+                    r'\(?0[2-9]\d{1,2}\)?[\s\-\.\–\—]?\d{5,8}',
+                    r'(?:wa|whatsapp|telp|hp|call|kontak|redaksi|telepon|phone)\s*[:\-]?\s*(?:\+62|62|0)8[1-9][0-9\-\s\.\–\—]{7,15}'
+                ]
+                for p in pola_telp:
+                    hits = re.findall(p, line, re.I)
+                    for h in hits:
+                        clean_num = re.sub(r'\D', '', h)
+                        if 9 <= len(clean_num) <= 15:
+                            found_contacts.append(h.strip())
             return list(set(found_contacts))
 
         all_raw_text = soup.get_text(" ", strip=True)
@@ -1116,106 +1223,143 @@ def scrape_contact_page(domain, html_content=None):
         # === v5.34: GENIUS LINK HARVESTER (Dual-Scoping: Article + Homepage) ===
         target_urls_high = []
         target_urls_low  = []
-        # Pola prioritas tinggi: Redaksi, Kontak, Tentang (v5.70 Expanded)
+        # Pola prioritas tinggi: Redaksi, Kontak, Tentang (v6.94 Expanded)
         PRIORITY_PATTERNS = [
-            'readstatik', '/redaksi', '/kontak', '/tentang', '/about', '/contact', 
+            '/readstatik', '/redaksi', '/kontak', '/tentang', '/about', '/contact', 
             '/hubungi', '/pedoman', '/sop-', '/iklan', '/profil', '/boks-redaksi',
-            '/tentang-kami', '/susunan-redaksi', '/manajemen', '/editorial', '/page/'
+            '/tentang-kami', '/susunan-redaksi', '/manajemen', '/editorial', '/page/',
+            '/pages/', '/site-map', '/our-team', '/corporate-info', '/legal', '/ethics',
+            '/redaksi-kami', '/box-redaksi', '/tim-redaksi', '/info-redaksi',
+            '/redaksional', '/editorial-board', '/info-iklan', '/advertise', '/advertising'
         ]
         
-        def harvest_links(current_soup):
-            """Mencari link profil/redaksi dari soup yang diberikan."""
+        def harvest_links(current_soup, source_name="Page"):
+            """Mencari link profil/redaksi dari soup yang diberikan (v6.97 Smart Sniper)."""
+            found_any = False
             for a in current_soup.find_all('a', href=True):
+                # Deteksi lokasi link (Footer/Header/Body)
+                parent_tags = [p.name for p in a.parents][:5]
+                location = "Body"
+                if 'footer' in parent_tags: location = "Footer"
+                elif 'header' in parent_tags or 'nav' in parent_tags: location = "Header"
+                
+                # Periksa teks link, title, aria-label, dan data-tooltip
                 teks_link = a.get_text().lower().strip()
+                title_attr = a.get('title', '').lower()
+                aria_attr = a.get('aria-label', '').lower()
                 href = a['href'].lower()
-                if any(kw in teks_link or kw in href for kw in KATA_KUNCI_PROFIL):
+                
+                combined_metadata = f"{teks_link} {title_attr} {aria_attr} {href}"
+                
+                if any(kw in combined_metadata for kw in KATA_KUNCI_PROFIL):
                     href_asli = a['href']
                     # Normalisasi URL
-                    if href_asli.startswith('/'): full_url = urljoin(domain, href_asli)
-                    elif href_asli.startswith('http'): full_url = href_asli
-                    else: full_url = urljoin(domain, "/" + href_asli)
+                    full_url = urljoin(domain, href_asli) if not href_asli.startswith('http') else href_asli
                     
                     parsed_target = urlparse(full_url).netloc.lower()
-                    # Filter Social Media (Kecuali WhatsApp untuk kontak)
-                    if any(sm in parsed_target for sm in ['facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'google.com', 'apple.com', 'play.google']):
+                    # Filter Social Media
+                    if any(sm in parsed_target for sm in ['facebook.com', 'twitter.com', 'instagram.com', 'youtube.com', 'linkedin.com', 't.me']):
                         continue
-                        
-                    if any(p in href_asli.lower() for p in PRIORITY_PATTERNS):
-                        if full_url not in target_urls_high: target_urls_high.append(full_url)
-                    else:
-                        if full_url not in target_urls_low: target_urls_low.append(full_url)
+                    
+                    if full_url not in target_urls_high and full_url not in target_urls_low:
+                        print(f"[*] Sniper Link Discovery: [{location}] -> {full_url[:60]}...")
+                        # Prioritaskan jika mengandung kata kunci utama di teks linknya
+                        if any(p in combined_metadata for p in ['redaksi', 'kontak', 'about', 'contact', 'tentang']):
+                            target_urls_high.append(full_url)
+                        else:
+                            target_urls_low.append(full_url)
+                        found_any = True
+            
+            # v6.93: Breadcrumb Sniffing (Tetap dipertahankan)
+            breadcrumb = current_soup.find(['nav', 'div', 'ul'], class_=re.compile(r'breadcrumb|path', re.I))
+            if breadcrumb:
+                for ba in breadcrumb.find_all('a', href=True):
+                    b_href = ba['href']
+                    b_url = urljoin(domain, b_href)
+                    if b_url not in target_urls_high: target_urls_high.append(b_url)
+            return found_any
 
         # 1. Panen dari halaman artikel saat ini
         harvest_links(soup)
         
         # 2. v5.34 Fallback: Jika link Redaksi/Kontak tidak ditemukan di artikel, panen dari Homepage
+        found_on_home = False
         if not target_urls_high:
             html_home = resilient_download(domain, timeout=10, max_retries=0, target="google", silent=True)
             if html_home:
                 home_soup = BeautifulSoup(html_home, 'html.parser')
-                harvest_links(home_soup)
+                found_on_home = harvest_links(home_soup, source_name="Homepage")
         
         # Gabungkan hasil panen dan dedup
         target_urls = list(dict.fromkeys(target_urls_high + target_urls_low))
                     
-        # v5.27: Dynamic WordPress Year Patterns & Extended Targets Fallback
-        import datetime
-        cur_year = str(datetime.datetime.now().year)
-        site_name = urlparse(domain).netloc.replace('www.', '').split('.')[0]
-        
-        fallback_paths = [
-            '/redaksi', '/tentang-kami', '/contact-us', '/about-us', '/kontak-kami',
-            '/susunan-redaksi', '/info-redaksi', '/hubungi-kami', '/pedoman-siber', '/about', '/kontak',
-            '/boks-redaksi', '/editorial', '/manajemen', '/profil-media', '/struktur-organisasi',
-            '/page/tentang-kami', '/page/redaksi', '/page/kontak-kami', '/page/contact-us',
-            '/site/page/tentang', '/site/page/redaksi', '/site/page/kontak', '/halaman/tentang-kami',
-            '/about?active=redaksi', '/about?active=about-us', '/about?active=kontak',
-            f'/redaksi-{site_name}-{cur_year}', f'/susunan-redaksi-{cur_year}', f'/redaksi-{cur_year}'
-        ]
-        
-        for p in fallback_paths:
-            fallback_url = urljoin(domain, p)
-            if fallback_url not in target_urls:
-                target_urls.append(fallback_url)
-                
-        # v6.43: TRIBUN NETWORK SPECIAL HANDLING (v6.89 Expanded)
+        # v6.95: Special Network Handling (Priority)
         if 'tribunnews.com' in domain:
             base_tribun = domain.split('tribunnews.com')[0] + 'tribunnews.com'
             target_urls.append(urljoin(base_tribun, '/about/'))
             target_urls.append(urljoin(base_tribun, '/contact-us/'))
             target_urls.append(urljoin(base_tribun, '/about/redaksi'))
             target_urls.append(urljoin(base_tribun, '/redaksi'))
-            # Beberapa subdomain menggunakan pola berbeda
-            if 'areax.tribunnews.com' in domain:
-                target_urls.append("https://areax.tribunnews.com/redaksi")
-                target_urls.append("https://areax.tribunnews.com/contact-us")
+            if 'jatim.tribunnews.com' in domain:
+                target_urls.append("https://jatim.tribunnews.com/redaksi")
+                target_urls.append("https://jatim.tribunnews.com/contact-us")
             
+        if 'kompas.com' in domain:
+            target_urls.append("https://inside.kompas.com/about-us")
+            target_urls.append("https://inside.kompas.com/contact-us")
+            target_urls.append("https://inside.kompas.com/about-us#meet")
+
+        # v6.97: SMART SKIP (Jangan Bruteforce jika sudah ada link berkualitas dari Homepage/Artikel)
+        if not target_urls and not ('kompas.com' in domain or 'tribunnews.com' in domain):
+            # v5.27: Dynamic WordPress Year Patterns & Extended Targets Fallback
+            import datetime
+            cur_year = str(datetime.datetime.now().year)
+            site_name = urlparse(domain).netloc.replace('www.', '').split('.')[0]
+            
+            fallback_paths = [
+                '/redaksi', '/tentang-kami', '/contact-us', '/about-us', '/kontak-kami',
+                '/susunan-redaksi', '/info-redaksi', '/hubungi-kami', '/pedoman-siber', '/about', '/kontak',
+                '/boks-redaksi', '/editorial', '/manajemen', '/profil-media', '/struktur-organisasi',
+                '/page/tentang-kami', '/page/redaksi', '/page/kontak-kami', '/page/contact-us',
+                '/site/page/tentang', '/site/page/redaksi', '/site/page/kontak', '/halaman/tentang-kami',
+                '/about?active=redaksi', '/about?active=about-us', '/about?active=kontak',
+                f'/redaksi-{site_name}-{cur_year}', f'/susunan-redaksi-{cur_year}', f'/redaksi-{cur_year}'
+            ]
+            
+            for p in fallback_paths:
+                fallback_url = urljoin(domain, p)
+                if fallback_url not in target_urls:
+                    target_urls.append(fallback_url)
+                
         # Urutkan agar 'redaksi', 'kontak', 'tentang' muncul di awal
         def priority_score(url):
             score = 0
-            low_url = url.lower()
-            if 'redaksi' in low_url or 'editorial' in low_url: score += 10
-            if 'kontak' in low_url or 'contact' in low_url: score += 8
-            if 'tentang' in low_url or 'about' in low_url: score += 5
+            url_low = url.lower()
+            if any(p in url_low for p in ['/redaksi', '/about', '/kontak', 'contact', 'tentang', 'iklan', 'advertise']):
+                score += 10
+            if 'inside.kompas.com' in url_low or 'tribunnews.com/about' in url_low:
+                score += 20 # High priority for known network pages
             return score
             
         target_urls.sort(key=priority_score, reverse=True)
         
-        # Pengecekan dimaksimalkan hingga 25 links (v6.92: Giga-Intel Genius Mode)
-        for target in target_urls[:25]:
+        # v6.97: Surgical Loop Limit
+        limit = 12 if target_urls_high else 25
+        for target_url in target_urls[:limit]:
             try:
                 # v6.25: Gunakan delay kecil agar tidak diciduk sebagai robot saat pindah halaman
                 time.sleep(random.uniform(0.5, 1.5))
-                html_redaksi = resilient_download(target, timeout=10, max_retries=1, target="google", silent=True)
+                print(f"[*] Sniper Profiling Layer: Checking -> {target_url[:60]}...")
+                html_redaksi = resilient_download(target_url, timeout=10, max_retries=1, target="google", silent=True)
                 if not html_redaksi: continue
                 
                 page_soup = BeautifulSoup(html_redaksi, 'html.parser')
-                is_it_profile = any(kw in target.lower() for kw in ['redaksi', 'tentang', 'about', 'contact', 'readstatik', 'profil'])
+                is_it_profile = any(kw in target_url.lower() for kw in ['redaksi', 'tentang', 'about', 'contact', 'readstatik', 'profil', 'redaksional'])
                 
                 # Ekstrak info
                 sniffed = sniff_contact_and_editorial_board(page_soup, is_profile_page=is_it_profile)
                 if sniffed and sniffed not in sub_page_text:
-                    sub_page_text += f"\n--- INFO DARI {target.upper()} ---\n{sniffed}"
+                    sub_page_text += f"\n--- INFO DARI {target_url.upper()} ---\n{sniffed}"
                     
                 # Jika sudah dapat nomor WA/Telp, bisa berhenti lebih cepat (efisiensi)
                 if any(c in sub_page_text for c in ['+62', '081', 'wa.me']):
@@ -1238,10 +1382,14 @@ def scrape_contact_page(domain, html_content=None):
             # Prepend the explicit contacts at the very beginning so AI sees it first
             contact_text = ext_contact + "\n" + contact_text
 
+        # v6.95: Final Bracket Removal Cleanup (No [] allowed)
+        contact_text = contact_text.replace('[', '').replace(']', '')
+
         return contact_text.strip()
         
     except Exception as e:
         print(f"[-] Gagal akses domain {domain} untuk info kontak: {e}")
+        traceback.print_exc() # v6.95: Detail error untuk debugging
         return ""
 
 def decode_google_news_url_local(source_url):
@@ -1883,7 +2031,8 @@ def extract_article(artikel_obj):
              
              # v6.84: Selalu coba cari halaman profil redaksi di domain utama agar akurat (Tanpa threshold)
              root_domain = f"{urlparse(real_url).scheme}://{urlparse(real_url).netloc}"
-             sub_text = scrape_contact_page(root_domain, soup)
+             # v6.95: Robust soup stringification to avoid NoneType issues
+             sub_text = scrape_contact_page(root_domain, html_content=str(soup))
              if sub_text:
                  profiling_laman += "\n" + sub_text
         except: pass
@@ -1899,98 +2048,4 @@ def extract_article(artikel_obj):
         
     except Exception as e:
         print(f"[-] Sniper Fatal Error: {e}")
-        return None
-        
-        if not html_content:
-            # v5.31: Coba AMP bypass untuk portal yang memblokir scraper pada URL normal
-            amp_url = None
-            _parsed_ru = urlparse(real_url)
-            # Tribun/Surya group: /amp/ prefix setelah netloc
-            if any(d in real_url for d in ['tribunnews.com', 'surya.co.id', 'areaxnow.com', 'detik.com', 'kompas.com']):
-                if '/amp/' not in real_url:
-                    amp_url = f"{_parsed_ru.scheme}://{_parsed_ru.netloc}/amp{_parsed_ru.path}"
-            # Tempo.co: /amp/read/ format (terbukti berhasil 200)
-            elif 'tempo.co' in real_url and '/amp/' not in real_url:
-                amp_url = re.sub(r'/read/', '/amp/read/', real_url, count=1)
-            if amp_url:
-                html_content = resilient_download_full(amp_url, timeout=10, target="google")
-                if html_content:
-                    real_url = amp_url
-                    print(f"[+] AMP Bypass berhasil: {amp_url[:60]}")
-        
-        if not html_content:
-            # Jika gagal total, gunakan deskripsi GNews sebagai fallback darurat
-            print(f"[!] Kegagalan fatal pengunduhan artikel: {real_url}")
-            text = f"Judul Lengkap: {gnews_title}\nDeskripsi: {gnews_desc}\n\n[Warning: Gagal mengunduh isi teks asli setelah beberapa percobaan]."
-            article = type('obj', (object,), {'title': gnews_title, 'text': text, 'authors': [], 'html': None})
-        else:
-            # Gunakan Newspaper3k untuk parsing HTML yang sudah berhasil diunduh manual
-            article = Article(real_url, language='id')
-            article.set_html(html_content)
-            article.parse()
-            
-            # v5.54: ANTI-BOT SHIELD
-            bot_keywords = ["bot verification", "cloudflare", "just a moment", "attention required", "ddos protection", "halaman tidak ditemukan", "access denied", "robot"]
-            if any(kw in str(article.title).lower() for kw in bot_keywords):
-                print(f"[!] Terdeteksi Halaman Blokir (Bot Challenge) pada {real_url}. Membatalkan profiling.")
-                return None
-        
-        title = article.title if hasattr(article, 'title') and article.title and len(article.title) > 15 else gnews_title
-        text = article.text if hasattr(article, 'text') else ""
-        authors = ", ".join(article.authors) if hasattr(article, 'authors') and article.authors else "Tidak tercantum"
-        
-        # Tentukan Tautan Asli (Source URL)
-        source_url = real_url
-        # Ekstrak domain asal portal dari URL yang sudah final
-        parsed_uri = urlparse(source_url)
-        domain = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
-        portal_name = parsed_uri.netloc.replace('www.', '')
-        
-        # v5.16: Inisialisasi awal untuk mencegah UnboundLocalError pada alur fallback
-        contact_info_text = ""
-        
-        # Jika teks kosong, kemungkinan besar portalnya memblokir bot
-        if not text or len(text) < 50:
-            print("[!] Peringatan: Gagal mengekstrak teks asli, fallback ke metode deskripsi pintar (GNews fallback).")
-            # v5.14: Penandaan Hiper-Jelas untuk AI & User
-            marker = "[SNIPPET_ONLY: Teks Lengkap Tidak Terjangkau]"
-            text = f"{marker}\nJudul Lengkap: {gnews_title}\nDeskripsi: {gnews_desc}\n\n[Catatan Intelijen: Sistem menemui proteksi link ganda atau blokir ISP. Lakukan evaluasi sebaik mungkin, JANGAN mengarang detail]."
-            contact_info_text = f"{marker}\n"
-        
-        # === EKSTRAKSI PENULIS/EDITOR DARI HTML BODY ARTIKEL ===
-        metadata_penulis = ""
-        if article.html:
-            soup_artikel = BeautifulSoup(article.html, 'html.parser')
-            metadata_penulis = ekstrak_metadata_penulis_dari_html(soup_artikel)
-        
-        # Gabungkan: metadata dari newspaper + metadata dari DOM parsing (v5.3 Source Priority)
-        semua_penulis_parts = []
-        if article.authors:
-            semua_penulis_parts.append(f"[DUGAAN PENULIS UTAMA: {', '.join(article.authors)}]")
-        if metadata_penulis:
-            semua_penulis_parts.append(f"[BYLINE ARTIKEL SPESIFIK:\n{metadata_penulis}]")
-        
-        if semua_penulis_parts:
-            text = "\n".join(semua_penulis_parts) + "\n\n" + text
-        
-        # === SCRAPING HALAMAN PROFIL/REDAKSI PORTAL ===
-        # --- SMART POST-SCRAPE FILTER (v5.63) ---
-        from crawler import is_potensi_ancaman
-        # Pengecekan ulang dengan teks artikel utuh. Jika positif/netral, langsung coret!
-        if text and not is_potensi_ancaman(title, text[:1500]):
-             print(f"[-] [Smart Post-Scrape] Sentimen aslinya Positif/Netral. Membatalkan Deep Profiling untuk '{title[:40]}'.")
-             return None
-             
-        contact_info_text = scrape_contact_page(domain, html_content=article.html)
-        
-        return {
-            "title": title,
-            "text": text,
-            "authors": authors,
-            "source_url": source_url,
-            "portal": portal_name,
-            "contact_text": contact_info_text
-        }
-    except Exception as e:
-        print(f"[-] Error scraping article {gnews_url}: {e}")
         return None
