@@ -1,23 +1,23 @@
 import os
 
 # Konfigurasi HuggingFace Token (v5.65)
-os.environ["HF_TOKEN"] = "MASKED_TOKEN"
+os.environ["HF_TOKEN"] = "REDACTED_HF_TOKEN"
 
 # Konfigurasi Telegram
-TELEGRAM_BOT_TOKEN = "MASKED_TOKEN"
-TELEGRAM_CHAT_ID = "MASKED_ID"
+TELEGRAM_BOT_TOKEN = "REDACTED_TELEGRAM_BOT_TOKEN"
+TELEGRAM_CHAT_ID = "REDACTED_TELEGRAM_CHAT_ID"
 
-TELEGRAM_BOT_TOKEN_2 = "MASKED_TOKEN"
-TELEGRAM_CHAT_ID_2 = "MASKED_ID"
+TELEGRAM_BOT_TOKEN_2 = "REDACTED_TELEGRAM_BOT_TOKEN_2"
+TELEGRAM_CHAT_ID_2 = "REDACTED_TELEGRAM_CHAT_ID_2"
 
 # API Key Google Gemini
-GEMINI_API_KEY = "MASKED_KEY"
+GEMINI_API_KEY = "REDACTED_GEMINI_API_KEY"
 
 # API Key OpenRouter (Gunakan Model Qwen / Llama Gratis)
-OPENROUTER_API_KEY = "MASKED_KEY"
+OPENROUTER_API_KEY = "REDACTED_OPENROUTER_API_KEY"
 
 # API Key Groq (30 RPM, 14.400 RPD - Super Cepat & Longgar)
-GROQ_API_KEY = "MASKED_KEY"
+GROQ_API_KEY = "REDACTED_GROQ_API_KEY"
 
 # Daftar Model Groq untuk Rotasi (Menghindari 429)
 GROQ_MODELS = [
@@ -162,28 +162,30 @@ FORBIDDEN_KEYWORDS = [
 # v5.89: Reguler Ancaman Jatim (Optimized to 19)
 KATA_KUNCI = [
     "korupsi", "pungli", "gratifikasi", "sengketa", "narkoba", "sabu-sabu",
-    "sampah", "aksi damai", "KDRT", "aparat", "demo", "konsolidasi", "unjuk rasa",
+    "sampah", "KDRT", "aparat", 
     "pupuk ilegal", "rokok ilegal", "tambang",
     "kdkmp", "kopdes", "kmp", "spbu", "bbm"
 ]
 
 # v5.87: Daftar Kata Kunci PRIORITAS (Optimized to 31)
 PRIORITY_KATA_KUNCI = [
-    # MBG & SPPG
-    "makan bergizi gratis", "mbg", "keracunan mbg", "sppg",
+    # MBG & SPPG & Program Pemerintah
+    "makan bergizi gratis", "mbg", "keracunan mbg", "sppg", "program pemerintah tni",
     # Koperasi & Jembatan
     "koperasi merah putih", "koperasi", "proyek jembatan", "jembatan",
+    # Demonstrasi & Konsolidasi
+    "demo", "unjuk rasa", "aksi damai", "konsolidasi",
     # TNI & Aparat (Sniper Mode)
-    "TNI", "oknum TNI", "oknum", "TNI viral",
+    "TNI", "oknum TNI", "oknum", "TNI viral", "tni bermasalah",
     "prajurit tni", "pengeroyokan tni",
     "keluarga TNI", "istri TNI", "batalyon", "militer", "komandan", "proyek tni",
     # --- ARAHAN PANGLIMA (Trending Kasad) ---
     # 1. Rencana Cerai Anggota
-    "TNI cerai", "TNI gugat cerai",
+    "TNI cerai", "TNI gugat cerai", "rencana cerai anggota tni",
     # 2. Isu LGBT
-    "tentara LGBT", "TNI gay",
+    "tentara LGBT", "TNI gay", "isu tni lgbt",
     # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "resepsi mewah tentara",
+    "pernikahan mewah TNI", "resepsi mewah tentara", "pernikahan mewah tni",
     # 4. Medsos Keluarga
     "istri TNI viral", "viral keluarga TNI", "TNI pamer"
 ]
@@ -195,21 +197,21 @@ PRIORITY_KATA_KUNCI = [
 GNEWS_LANGUAGE = 'id'
 GNEWS_COUNTRY = 'ID'
 GNEWS_PERIOD = '1d' # Perayapan awal dalam kurun waktu 1 hari terakhir
-CRAWL_INTERVAL_SECONDS = 3600 # Waktu tunggu jika siklus sudah selesai (1 jam)
-# v5.90: GENIUS STEALTH MODE (Prioritas: Anti-Blokir & Keberhasilan Link)
-USE_CLOUDFLARE_DNS = True # Menggunakan DoH (DNS-over-HTTPS) Cloudflare 1.1.1.1
-DELAY_BETWEEN_REQUESTS = 45 # Jeda dasar sangat panjang (45 detik) demi keamanan absolut
-STEALTH_JITTER = (30, 90)    # Jeda tambahan sangat acak (30-90 detik) untuk mematikan pola bot
+CRAWL_INTERVAL_SECONDS = 1800 # Waktu tunggu jika siklus sudah selesai (30 menit)
+# v6.50: GIGA-THROTTLE (Anti-Lama Edition)
+USE_CLOUDFLARE_DNS = True 
+DELAY_BETWEEN_REQUESTS = 15 # Jeda dasar diperlambat (15 detik) untuk hindari blokir
+STEALTH_JITTER = (10, 45)    # Jeda tambahan (10-45 detik) - Meniru perilaku manusia
 
-USE_PROXY = False # Set True jika ingin menggunakan proxy manual di bawah
+USE_PROXY = False # Dimatikan sesuai instruksi: Jaringan user stabil
 PROXY_SETTING = {
-    "http": "http://user:pass@host:port",
-    "https": "http://user:pass@host:port"
+    "http": None,
+    "https": None
 }
 
 # --- GENIUS AUTO-PROXY HARVESTER (v5.43) ---
-# Jika diaktifkan, sistem akan otomatis mencari proxy gratis jika terblokir.
-USE_AUTO_HARVESTER = True 
+# Dimatikan sesuai instruksi: Jaringan user stabil
+USE_AUTO_HARVESTER = False 
 
 # --- ATOMIC SNIPER: PLAYWRIGHT (v5.94) ---
 # Aktifkan browser headless untuk membongkar URL yang paling sulit.

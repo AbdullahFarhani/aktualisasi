@@ -17,13 +17,13 @@ def kirim_notifikasi_telegram(judul, tautan, laman, aktor, kontak, w5_h1):
     if aktor and not any(f in str(aktor).lower() for f in ['informasi nihil', 'gagal parsing']):
         pesan += f"{aktor}\n\n"
     
-    # 3. Profiling Laman (v6.23: Dynamic Masking)
+    # 3. Profiling Laman (v6.80: Exact User Formatting)
     if isinstance(kontak, dict):
         p_nama = kontak.get('nama_laman', laman)
-        p_alamat = kontak.get('alamat', '')
-        p_redaksi = kontak.get('redaksi', '')
-        p_kontak = kontak.get('kontak', '')
-        p_lain = kontak.get('info_lain', '')
+        p_alamat = kontak.get('alamat_laman', '')
+        p_redaksi = kontak.get('jajaran_redaksi_laman', '')
+        p_kontak = kontak.get('kontak_laman', '')
+        p_lain = kontak.get('informasi_profiling_laman_lainnya', '')
 
         def is_valid(val):
             if not val: return False
@@ -31,10 +31,10 @@ def kirim_notifikasi_telegram(judul, tautan, laman, aktor, kontak, w5_h1):
             return not any(f in str(val).lower() for f in forbidden)
 
         if is_valid(p_nama): pesan += f"Nama Laman: {p_nama}\n"
-        if is_valid(p_alamat): pesan += f"Alamat: {p_alamat}\n"
-        if is_valid(p_redaksi): pesan += f"Redaksi: {p_redaksi}\n"
-        if is_valid(p_kontak): pesan += f"Kontak: {p_kontak}\n"
-        if is_valid(p_lain): pesan += f"Info Lain: {p_lain}\n"
+        if is_valid(p_alamat): pesan += f"Alamat Laman: {p_alamat}\n"
+        if is_valid(p_redaksi): pesan += f"Jajaran Redaksi Laman: {p_redaksi}\n"
+        if is_valid(p_kontak): pesan += f"Kontak Laman: {p_kontak}\n"
+        if is_valid(p_lain): pesan += f"Informasi Profiling Laman Lainnya: {p_lain}\n"
     else:
         # Fallback jika AI mengembalikan string
         if kontak and not any(f in str(kontak).lower() for f in ['informasi nihil', 'tidak ditemukan']):

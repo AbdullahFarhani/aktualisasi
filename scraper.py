@@ -116,69 +116,51 @@ def decode_spa_html(html_text):
     import html as html_lib
     if not html_text: return html_text
     
-    injected_html = ""
-    # 1. Deteksi Inertia.js (Jawapos) dkk
-    match_inertia = re.search(r'data-page="([^"]+)"', html_text)
-    if match_inertia:
-        print("[+] Resolving Inertia.js SPA Payload...")
+    def extract_strings_fast(raw_json_str, output_list):
+        """v6.86: Hyper-Fast Regex Extractor + Contact Sniffer."""
+        # 1. Tautan (Batas 100 tautan untuk performa)
+        urls = re.findall(r'"(?:url|href|link|path)":\s*"([^"]+)"', raw_json_str)
+        for u in list(set(urls))[:100]:
+            if len(u) > 3 and (u.startswith('http') or u.startswith('/')):
+                output_list.append(f'<a href="{u}">{u}</a>\n')
+        
+        # 2. Kontak Langsung (PENTING)
+        phones = re.findall(r'08[0-9]{8,11}', raw_json_str)
+        for p in set(phones):
+            output_list.append(f'<div>[KONTAK-JSON]: {p}</div>\n')
+            
+        # 3. Teks Panjang (Maks 200 matches)
+        strings = re.findall(r':\s*"([^"]{10,300})"', raw_json_str)
+        for s in list(set(strings))[:200]:
+            if any(kw in s.lower() for kw in ['redaksi', 'editor', 'reporter', 'alamat', 'kantor', 'telp', 'email']):
+                output_list.append(f'<div>{s}</div>\n')
+
+    injected_html_list = []
+    # 1. Deteksi Inertia.js
+    # Perbaikan Regex: Pastikan diawali id="app" atau di dalam data-page (v6.86)
+    match_inertia = re.search(r'data-page="(\{&quot;component&quot;:[^"]+)"', html_text)
+    if not match_inertia:
+        match_inertia = re.search(r'data-page="([^"]+)"', html_text)
+    
+    if match_inertia and len(match_inertia.group(1)) > 50:
+        print("[+] Resolving Inertia.js SPA Payload (Giga-Fast Mode)...")
         try:
             raw_json = html_lib.unescape(match_inertia.group(1))
-            data = json.loads(raw_json)
-            
-            def extract_strings(obj):
-                res = ""
-                if isinstance(obj, dict):
-                    for key, val in obj.items():
-                        if key in ['url', 'href', 'link'] and isinstance(val, str) and len(val) > 2:
-                            res += f'<a href="{val}">{val}</a>\n'
-                        elif isinstance(val, str) and len(val) > 5:
-                            if key in ['content', 'body', 'text', 'description']:
-                                res += f'<article>{val}</article>\n'
-                            else:
-                                res += f'<div>{val}</div>\n'
-                        else:
-                            res += extract_strings(val)
-                elif isinstance(obj, list):
-                    for item in obj:
-                        res += extract_strings(item)
-                elif isinstance(obj, str):
-                    if len(obj) > 10:
-                        res += f'<div>{obj}</div>\n'
-                return res
-            injected_html += extract_strings(data)
+            extract_strings_fast(raw_json, injected_html_list)
         except Exception as e:
             print("[-] SPA Inertia Unwrapper error:", e)
 
     # 2. Deteksi Next.js (__NEXT_DATA__)
     match_next = re.search(r'<script id="__NEXT_DATA__" type="application/json">([^<]+)</script>', html_text)
     if match_next:
-        print("[+] Resolving Next.js SPA Payload...")
+        print("[+] Resolving Next.js SPA Payload (Fast Mode)...")
         try:
-            raw_json = match_next.group(1)
-            data = json.loads(raw_json)
-            def extract_strings(obj):
-                res = ""
-                if isinstance(obj, dict):
-                    for key, val in obj.items():
-                        if key in ['url', 'href', 'link'] and isinstance(val, str) and len(val) > 2:
-                            res += f'<a href="{val}">{val}</a>\n'
-                        elif isinstance(val, str) and len(val) > 5:
-                            if key in ['content', 'body', 'text', 'description']:
-                                res += f'<article>{val}</article>\n'
-                            else:
-                                res += f'<div>{val}</div>\n'
-                        else:
-                            res += extract_strings(val)
-                elif isinstance(obj, list):
-                    for item in obj:
-                        res += extract_strings(item)
-                elif isinstance(obj, str):
-                    if len(obj) > 10:
-                        res += f'<div>{obj}</div>\n'
-                return res
-            injected_html += extract_strings(data)
+            raw_json_next = match_next.group(1)
+            extract_strings_fast(raw_json_next, injected_html_list)
         except Exception as e:
             print("[-] SPA Next.js Unwrapper error:", e)
+
+    injected_html = "".join(injected_html_list)
 
     if injected_html:
         if "</body>" in html_text:
@@ -434,7 +416,8 @@ KATA_KUNCI_PROFIL = [
     'profil', 'perusahaan', 'publisher', 'manajemen', 'dewan pers', 
     'corporate', 'informasi', 'bantuan', 'pusat bantuan', 'boks redaksi',
     'pedoman', 'visi-misi', 'sop', 'iklan', 'indeks', 'hak-jawab', 'struktur',
-    'organisasi', 'biro', 'perwakilan', 'alamat', 'location'
+    'organisasi', 'biro', 'perwakilan', 'alamat', 'location', 'kode etik',
+    'privacy policy', 'kebijakan privasi', 'karir', 'career', 'peta situs', 'sitemap'
 ]
 
 def ekstrak_halaman_redaksi_global(soup, base_url):
@@ -569,6 +552,10 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, "https://www.penabicara.com/kontak")
         potensial_links.insert(0, "https://www.penabicara.com/redaksi")
         potensial_links.insert(0, "https://www.penabicara.com/about-us")
+    # Ketik.com
+    elif 'ketik.com' in base_domain:
+        potensial_links.insert(0, "https://ketik.com/about?active=redaksi")
+        potensial_links.insert(0, "https://ketik.com/about?active=about-us")
     # Okezone
     elif 'okezone.com' in base_domain:
         potensial_links.insert(0, "https://www.okezone.com/about-us")
@@ -986,7 +973,18 @@ def sniff_contact_and_editorial_board(soup, is_profile_page=False):
             if element.name == 'div' and element.find(['p', 'div', 'span']):
                 continue
                 
-            teks_el = element.get_text(" ", strip=True)
+            # v6.87: Decode Cloudflare Email Protection
+            cf_email = element.find('span', class_='__cf_email__') or element.find('a', class_='__cf_email__')
+            cf_decoded = ""
+            if cf_email and cf_email.get('data-cfemail'):
+                try:
+                    hex_str = cf_email['data-cfemail']
+                    r = int(hex_str[:2], 16)
+                    email = ''.join([chr(int(hex_str[i:i+2], 16) ^ r) for i in range(2, len(hex_str), 2)])
+                    cf_decoded = f" [Email: {email}] "
+                except: pass
+
+            teks_el = element.get_text(" ", strip=True) + cf_decoded
             # v6.31: Deteksi link WA AKTUAL (Abaikan Channel/Share)
             wa_in_el = element.find('a', href=re.compile(r'wa\.me|whatsapp', re.I))
             if wa_in_el:
@@ -1057,6 +1055,7 @@ def scrape_contact_page(domain, html_content=None):
     v5.39: Full Genius Refactor dengan Sub-page Board Sniffing.
     """
     contact_text = ""
+    sub_page_text = "" # v6.89: Fix NameError
     try:
         if html_content:
             soup = BeautifulSoup(html_content, 'html.parser')
@@ -1088,6 +1087,11 @@ def scrape_contact_page(domain, html_content=None):
         phones = extract_contacts_from_text(all_raw_text)
         emails = re.findall(r'[a-zA-Z0-9._%+-]+(?:@|\(at\)|\[at\])[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', all_raw_text, re.I)
         
+        # v6.88: Tambahan scan link mailto:
+        for a in soup.find_all('a', href=re.compile(r'^mailto:', re.I)):
+            m_email = a['href'].replace('mailto:', '').split('?')[0].strip()
+            if m_email and m_email not in emails: emails.append(m_email)
+        
         # 3. WA.ME Link Scanner (Direct WA)
         wa_links = []
         for a in soup.find_all('a', href=True):
@@ -1098,9 +1102,9 @@ def scrape_contact_page(domain, html_content=None):
                     wa_links.append(f"WhatsApp: +{wa_num}")
         
         if emails or phones or wa_links:
-            ext_contact = "\n[DATA KONTAK AKTUAL (HEURISTIK v6.0)]:\n"
-            if wa_links: ext_contact += "Direct WA Link: " + " | ".join(list(set(wa_links))) + "\n"
-            if phones: ext_contact += "Telepon/WhatsApp: " + " | ".join(phones) + "\n"
+            ext_contact = "\n[DATA KONTAK AKTUAL (SANGAT PENTING - WAJIB EKSTRAK NOMOR INI KE DALAM KUNCI kontak_laman)]:\n"
+            if wa_links: ext_contact += "Nomor WA: " + " | ".join(list(set(wa_links))) + "\n"
+            if phones: ext_contact += "Nomor Telepon/WA: " + " | ".join(phones) + "\n"
             if emails: ext_contact += "Email: " + " | ".join(list(set(emails))) + "\n"
             contact_text += ext_contact + "\n"
         
@@ -1174,12 +1178,17 @@ def scrape_contact_page(domain, html_content=None):
             if fallback_url not in target_urls:
                 target_urls.append(fallback_url)
                 
-        # v6.43: TRIBUN NETWORK SPECIAL HANDLING
+        # v6.43: TRIBUN NETWORK SPECIAL HANDLING (v6.89 Expanded)
         if 'tribunnews.com' in domain:
             base_tribun = domain.split('tribunnews.com')[0] + 'tribunnews.com'
             target_urls.append(urljoin(base_tribun, '/about/'))
             target_urls.append(urljoin(base_tribun, '/contact-us/'))
             target_urls.append(urljoin(base_tribun, '/about/redaksi'))
+            target_urls.append(urljoin(base_tribun, '/redaksi'))
+            # Beberapa subdomain menggunakan pola berbeda
+            if 'jatim.tribunnews.com' in domain:
+                target_urls.append("https://jatim.tribunnews.com/redaksi")
+                target_urls.append("https://jatim.tribunnews.com/contact-us")
             
         # Urutkan agar 'redaksi', 'kontak', 'tentang' muncul di awal
         def priority_score(url):
@@ -1217,7 +1226,18 @@ def scrape_contact_page(domain, html_content=None):
             
         if sub_page_text:
             contact_text += "\n[PROFIL REDAKSI & KONTAK MEDIA]:\n" + sub_page_text
+            
+        # v6.83: Pastikan semua nomor HP dari halaman sub juga tertangkap dan diberi label PENTING
+        final_phones = extract_contacts_from_text(contact_text)
+        final_emails = re.findall(r'[a-zA-Z0-9._%+-]+(?:@|\(at\)|\[at\])[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', contact_text, re.I)
         
+        if final_phones or final_emails:
+            ext_contact = "\n[DATA KONTAK AKTUAL (SANGAT PENTING - WAJIB EKSTRAK KONTEN INI KE DALAM KUNCI kontak_laman)]:\n"
+            if final_phones: ext_contact += "Nomor Telepon/WA: " + " | ".join(final_phones) + "\n"
+            if final_emails: ext_contact += "Email: " + " | ".join(list(set(final_emails))) + "\n"
+            # Prepend the explicit contacts at the very beginning so AI sees it first
+            contact_text = ext_contact + "\n" + contact_text
+
         return contact_text.strip()
         
     except Exception as e:
@@ -1274,19 +1294,29 @@ def decode_google_news_url_local(source_url):
         return None
 
 def extract_clean_title(soup):
-    """v5.91: Heuristic Title Extractor (Anti-Trash)"""
+    """v6.82: Heuristic Title Extractor (Anti-Trash & Anti-Placeholder)"""
     try:
-        # 1. OpenGraph
-        og = soup.find("meta", property="og:title")
-        if og and og.get("content"): return og["content"].strip()
-        # 2. Twitter
-        tw = soup.find("meta", name="twitter:title")
-        if tw and tw.get("content"): return tw["content"].strip()
-        # 3. H1 (Utama)
+        def is_valid_title(t):
+            if not t: return False
+            t_low = t.lower().strip()
+            if t_low in ["judul artikel", "berita utama", "news", "home"]: return False
+            if len(t_low) < 15: return False
+            return True
+
+        # 1. H1 (Utama, paling akurat secara visual)
         h1 = soup.find("h1")
-        if h1: return h1.get_text().strip()
+        if h1 and is_valid_title(h1.get_text()): return h1.get_text().strip()
+        
+        # 2. OpenGraph
+        og = soup.find("meta", property="og:title")
+        if og and is_valid_title(og.get("content")): return og["content"].strip()
+        
+        # 3. Twitter
+        tw = soup.find("meta", name="twitter:title")
+        if tw and is_valid_title(tw.get("content")): return tw["content"].strip()
+        
         # 4. Title Tag
-        if soup.title: return soup.title.string.strip()
+        if soup.title and is_valid_title(soup.title.string): return soup.title.string.strip()
     except: pass
     return ""
 
@@ -1296,8 +1326,13 @@ def extract_clean_article_body(soup, url):
     for tag in soup(["script", "style", "nav", "header", "footer", "aside", "form", "ins", "iframe", "noscript"]):
         tag.decompose()
         
-    # Cari kontainer utama
-    selectors = ["article", ".article-content", ".entry-content", ".detail__body-text", ".read__content", ".post-content", ".isi-berita", ".content"]
+    # Cari kontainer utama (v6.88: Expanded Selectors for Local Portals)
+    selectors = [
+        "article", ".article-content", ".entry-content", ".detail__body-text", 
+        ".read__content", ".post-content", ".isi-berita", ".content", 
+        ".post-inner", ".entry-body", ".article-body", ".detail-content",
+        "#article-body", "#content-main", ".story-content", ".news-content"
+    ]
     for s in selectors:
         target = soup.select_one(s)
         if target:
@@ -1839,18 +1874,18 @@ def extract_article(artikel_obj):
         # Ambil Metadata Aktor (Tokoh/Reporter/Editor) via Sniffer
         aktor_info = sniff_actors_and_editorial(soup, html)
         
-        # 3. PROFILING LAMAN (v5.88: Smart Discovery)
+        # 3. PROFILING LAMAN (v6.84: Giga-Aggressive Discovery)
         # Mencari info kontak media secara agresif di halaman ini dan halaman terkait
         profiling_laman = ""
         try:
              # v5.88: Heuristic sniffer (Phone/WA/Email/Address)
              profiling_laman = sniff_contact_and_editorial_board(soup, is_profile_page=False)
              
-             # Jika belum cukup detail, cari halaman profil redaksi
-             if len(profiling_laman) < 100:
-                 sub_text = scrape_contact_page(real_url, soup)
-                 if sub_text:
-                     profiling_laman += "\n" + sub_text
+             # v6.84: Selalu coba cari halaman profil redaksi di domain utama agar akurat (Tanpa threshold)
+             root_domain = f"{urlparse(real_url).scheme}://{urlparse(real_url).netloc}"
+             sub_text = scrape_contact_page(root_domain, soup)
+             if sub_text:
+                 profiling_laman += "\n" + sub_text
         except: pass
 
         return {

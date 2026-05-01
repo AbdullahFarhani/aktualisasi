@@ -4,6 +4,29 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ---
 
+## [v6.91] — 2026-04-30
+### Human-Stealth Mode & Delay Jitter
+- **Anti-Bot Jitter**: Memperlambat siklus crawling GNews secara signifikan untuk menghindari deteksi sistem otomatis Google ("We're sorry... automated queries").
+- **Dynamic Jitter**: Menyesuaikan `DELAY_BETWEEN_REQUESTS` ke 15 detik dan `STEALTH_JITTER` antara 10-45 detik untuk mensimulasikan perilaku pencarian manusia.
+- Peningkatan keamanan jaringan dari pemblokiran IP saat rotasi keyword.
+
+---
+
+## [v6.90] — 2026-04-30
+### Proxy Removal & Network Stability
+- **Direct Connection Override**: Mematikan secara total penggunaan proxy (`USE_PROXY = False`) dan auto-harvester (`USE_AUTO_HARVESTER = False`) karena jaringan lokal stabil.
+- **Log Cleansing**: Memperbarui pesan log crawler dari "GNews Proxy Berhasil!" menjadi status asli "(Direct)" untuk menghindari kebingungan.
+
+---
+
+## [v6.89] — 2026-04-30
+### Genius Sniper Patch & Error Handling
+- **Critical Fix (NoneType Error)**: Memperbaiki *bug* variabel `sub_page_text` yang tidak terinisialisasi pada `scrape_contact_page` yang menyebabkan kegagalan deteksi kontak pada portal bersarang.
+- **Tribun Network Special Sniper**: Menambahkan pola khusus untuk membedah halaman redaksi Tribun Network (khususnya subdomain seperti jatim.tribunnews.com) secara langsung dan akurat.
+- Peningkatan sistem prioritas URL profil: Menambahkan bobot prioritas tertinggi untuk keyword "redaksi" dan "kontak" dibandingkan halaman profil lain.
+
+---
+
 ## [v5.89] — 2026-04-28
 ### Full Requirement Alignment
 - **Cycle Optimization**: Menyesuaikan `DELAY_BETWEEN_REQUESTS` (8s) dan `STEALTH_JITTER` (2-8s) untuk memastikan 50 kata kunci di 32 kota (1600 query) selesai dalam target 6 jam.

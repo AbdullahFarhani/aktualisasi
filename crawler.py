@@ -127,32 +127,73 @@ def is_potensi_ancaman(judul, deskripsi, strict_mode=False):
     else:
         return indikasi_kasus
 
+def fetch_gnews_rss_resilient(query):
+    """v6.70: Mengunduh RSS Google News secara manual dengan rotasi proxy jika terblokir."""
+    import requests
+    import xml.etree.ElementTree as ET
+    from scraper import get_current_proxy
+    from urllib.parse import quote
+    
+    # URL RSS Google News (Ditambah when:1d untuk membatasi 24 jam terakhir)
+    encoded_query = quote(query + " when:1d")
+    rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=id&gl=ID&ceid=ID:id"
+    
+    from scraper import get_human_headers
+    
+    # Cobalah beberapa kali (walau tanpa proxy, tetap dicoba dengan delay membesar jika gagal)
+    for attempt in range(3):
+        proxy = get_current_proxy()
+        headers = get_human_headers()
+        try:
+            resp = requests.get(rss_url, headers=headers, proxies=proxy, timeout=15)
+            if resp.status_code == 200:
+                # Parsing RSS
+                root = ET.fromstring(resp.text)
+                articles = []
+                for item in root.findall('.//item'):
+                    articles.append({
+                        'title': item.find('title').text if item.find('title') is not None else "",
+                        'description': item.find('description').text if item.find('description') is not None else "",
+                        'url': item.find('link').text if item.find('link') is not None else "",
+                        'publisher': {'title': item.find('source').text if item.find('source') is not None else "Unknown"},
+                        'published date': item.find('pubDate').text if item.find('pubDate') is not None else ""
+                    })
+                if articles:
+                    conn_type = "Proxy" if proxy else "Direct"
+                    print(f"[+] GNews Berhasil! ({conn_type}) - Menemukan {len(articles)} berita.")
+                    return articles
+            elif resp.status_code == 503:
+                print(f"[*] Proxy/IP terblokir Google (503). Mencoba proxy lain ({attempt+1}/5)...")
+                if not proxy:
+                    print("[!] Peringatan: IP Asli diblokir GNews (503) & Proxy dimatikan. Beralih ke Lapis 2 (DDG).")
+                    break
+            else:
+                print(f"[*] GNews RSS Status {resp.status_code}. Mencoba lagi...")
+        except Exception as e:
+            print(f"[*] Error fetching RSS with proxy: {e}")
+        
+        time.sleep(2)
+        
+    return []
+
 def search_news(keyword, location):
-    """Mencari berita dengan kombinasi keyword dan lokasi (hanya 24 jam terakhir)."""
+    """Mencari berita dengan Google News (Resilient Proxy), fallback ke DuckDuckGo."""
     from datetime import datetime, timedelta
+    from duckduckgo_search import DDGS
     
     query = f"{keyword} {location}"
     print(f"[*] Mencari berita untuk query: '{query}'")
     
-    # Gunakan tanggal eksplisit agar PASTI hanya berita 24 jam terakhir
-    sekarang = datetime.now()
-    kemarin = sekarang - timedelta(days=1)
-    
-    google_news = GNews(
-        language=GNEWS_LANGUAGE, 
-        country=GNEWS_COUNTRY, 
-        period=GNEWS_PERIOD,
-        max_results=100
-    )
-    
+    # --- LAPIS 1: GOOGLE NEWS (v6.70 Proxy Resilient) ---
     try:
-        articles = google_news.get_news(query)
+        articles = fetch_gnews_rss_resilient(query)
         if articles:
-            print(f"[+] Ditemukan {len(articles)} berita untuk query: '{query}'")
-        return articles
+            return articles
     except Exception as e:
-        print(f"[-] Error crawling GNews untuk '{query}': {e}")
-        return []
+        print(f"[!] GNews Resilient Error: {e}")
+        
+    # v6.81: Sesuai instruksi, jika GNews nihil, langsung lanjut ke kata kunci berikutnya tanpa fallback DDG
+    return []
 
 def filter_new_articles(articles, history_file='processed_urls.json'):
     """Memfilter URL agar yang sudah diproses atau lewat dari 24 jam dibuang."""

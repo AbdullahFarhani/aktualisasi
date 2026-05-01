@@ -246,6 +246,28 @@ def producer_crawling():
             random.shuffle(prio_loc)
             random.shuffle(prio_kw) # Acak urutan keyword prioritas
             
+            # v6.51: FASE 1 - PENCARIAN AGREGAT JAWA TIMUR (INSTAN)
+            print("[*] FASE 1: Memulai Pencarian Agregat Jawa Timur (Target: Kecepatan)...")
+            for keyword in prio_kw:
+                # Cari langsung dengan wilayah induk "Jawa Timur" untuk hasil cepat
+                artikel_baru = search_news(keyword, "Jawa Timur")
+                artikel_belum_diproses = filter_new_articles(artikel_baru)
+                if not artikel_belum_diproses: continue
+                
+                for artikel in artikel_belum_diproses:
+                    mark_as_processed(artikel.get('url'))
+                    if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
+                        global task_counter
+                        task_counter += 1
+                        antrean_berita.put((1, task_counter, (artikel, keyword, "Jawa Timur")))
+                        print(f"[!] PRIORITAS DITEMUKAN (AGREGAT): '{artikel.get('title','')[:30]}' -> Antrean 1")
+                
+                # v6.91: Jeda antar query diperlambat signifikan (Anti-Bot)
+                from config import DELAY_BETWEEN_REQUESTS, STEALTH_JITTER
+                time.sleep(DELAY_BETWEEN_REQUESTS + random.randint(STEALTH_JITTER[0], STEALTH_JITTER[1]))
+
+            # v6.51: FASE 2 - PENCARIAN GRANULAR KAB/KOTA (DEEP SCAN)
+            print("[*] FASE 2: Memulai Pencarian Granular Kab/Kota (Target: Kedalaman)...")
             for keyword in prio_kw:
                 for lokasi in prio_loc:
                     artikel_baru = search_news(keyword, lokasi)
@@ -255,14 +277,13 @@ def producer_crawling():
                     for artikel in artikel_belum_diproses:
                         mark_as_processed(artikel.get('url'))
                         if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
-                            # Tag Priority: 1 (High Priority) - LANGSUNG KIRIM
-                            global task_counter
                             task_counter += 1
                             antrean_berita.put((1, task_counter, (artikel, keyword, lokasi)))
-                            print(f"[!] PRIORITAS DITEMUKAN: '{artikel.get('title','')[:30]}' -> Antrean 1 (Urutan Utama)")
+                            print(f"[!] PRIORITAS DITEMUKAN (GRANULAR): '{artikel.get('title','')[:30]}' -> Antrean 1")
                     
-                    # Jeda antar query agar tidak diciduk GNews (v5.46 Stealth)
-                    time.sleep(random.randint(5, 15))
+                    # v6.91: Jeda antar query diperlambat signifikan atas permintaan (Anti-Bot)
+                    from config import DELAY_BETWEEN_REQUESTS, STEALTH_JITTER
+                    time.sleep(DELAY_BETWEEN_REQUESTS + random.randint(STEALTH_JITTER[0], STEALTH_JITTER[1]))
             
             # [PENTING] TUNGGU SEMUA BERITA PRIORITAS SELESAI DIKIRIM SEBELUM LANJUT KE REGULER
             if not antrean_berita.empty():

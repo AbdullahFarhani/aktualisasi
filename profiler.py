@@ -44,14 +44,15 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v6.42):
+    # TUGAS ANALISIS INTELIJEN (v6.43):
     1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
-    2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada MBG, Koperasi Merah Putih, Batalyon/TNI bermasalah, oknum, cerai anggota, LGBT, dan kemewahan.
-    3. PROFILING LAMAN (GENIUS SCAN):
+    2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada MBG, Koperasi Merah Putih, Batalyon/TNI bermasalah, oknum, cerai anggota, LGBT, kemewahan, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah tni.
+    3. PROFILING LAMAN (GENIUS SCAN - CARI SAMPAI DAPAT):
        - Nama Laman: Nama portal media.
        - Alamat Laman: Alamat kantor fisik (jika ada).
-       - Jajaran Redaksi: Nama-nama Pemred, Redaktur, Editor, dsb.
-       - Kontak Laman: HANYA NOMOR AKTUAL (WA: [Kosongkan Jika Tidak Ada], Telp: [Kosongkan Jika Tidak Ada], Email: [Kosongkan Jika Tidak Ada]).
+       - Jajaran Redaksi Laman: Nama-nama Pemred, Redaktur, Editor, Penulis, dsb.
+       - Kontak Laman: NOMOR TELEPON ATAU NOMOR WA (WAJIB UTAMAKAN INI). Ekstrak dari teks secara teliti. Jika sama sekali tidak ada, kosongkan.
+       - Info Lain: Informasi tambahan profiling laman.
     4. IDENTIFIKASI AKTOR: Pisahkan Aktor Berita vs Kru Media.
     
     KEMBALIKAN JSON (STRICT FORMAT):
@@ -61,10 +62,10 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
         "actors_involved": "Nama Tokoh (Peran), Nama (Reporter), Nama (Editor)",
         "contact_and_address": {{
             "nama_laman": "Nama Media",
-            "alamat": "Alamat Kantor",
-            "redaksi": "Daftar Redaksi Lengkap",
-            "kontak": "WA: , Telp: , Email: ",
-            "info_lain": "Informasi tambahan penting"
+            "alamat_laman": "Alamat Kantor Laman",
+            "jajaran_redaksi_laman": "Daftar Redaksi Lengkap",
+            "kontak_laman": "Nomor Telepon: , Nomor WA: , Email: ",
+            "informasi_profiling_laman_lainnya": "Informasi tambahan penting"
         }},
         "fakta_5w1h": "Analisis fakta mendalam (2-3 Paragraf)"
     }}
