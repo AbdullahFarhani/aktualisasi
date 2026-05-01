@@ -30,17 +30,15 @@ def kirim_notifikasi_telegram(judul, tautan, laman, aktor, kontak, w5_h1):
             forbidden = ['informasi nihil', 'tidak ditemukan', 'unknown', 'nihil', 'n/a']
             return not any(f in str(val).lower() for f in forbidden)
 
-        if is_valid(p_nama): pesan += f"Nama Laman: {p_nama}\n"
-        if is_valid(p_alamat): pesan += f"Alamat Laman: {p_alamat}\n"
-        if is_valid(p_redaksi): pesan += f"Jajaran Redaksi Laman: {p_redaksi}\n"
-        if is_valid(p_kontak): pesan += f"Kontak Laman: {p_kontak}\n"
-        if is_valid(p_lain): pesan += f"Informasi Profiling Laman Lainnya: {p_lain}\n"
+        if is_valid(p_nama): pesan += f"[nama laman]\n{p_nama}\n\n"
+        if is_valid(p_alamat): pesan += f"[alamat laman]\n{p_alamat}\n\n"
+        if is_valid(p_redaksi): pesan += f"[jajaran redaksi laman]\n{p_redaksi}\n\n"
+        if is_valid(p_kontak): pesan += f"[kontak laman, meliputi nomor telepon, nomor WA, email, dsb (utamakan mendapatkan nomor telepon ataupun nomor WA)]\n{p_kontak}\n\n"
+        if is_valid(p_lain): pesan += f"[informasi-informasi profiling laman lainnya]\n{p_lain}\n\n"
     else:
         # Fallback jika AI mengembalikan string
         if kontak and not any(f in str(kontak).lower() for f in ['informasi nihil', 'tidak ditemukan']):
-            pesan += f"{kontak}\n"
-    
-    pesan += "\n"
+            pesan += f"[informasi profiling laman]\n{kontak}\n\n"
     
     # 4. Fakta 5W+1H
     pesan += f"<b>Fakta-Fakta</b>\n{w5_h1}"

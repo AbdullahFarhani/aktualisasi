@@ -1201,8 +1201,8 @@ def scrape_contact_page(domain, html_content=None):
             
         target_urls.sort(key=priority_score, reverse=True)
         
-        # Pengecekan dimaksimalkan hingga 15 links (v6.34: Giga-Intel)
-        for target in target_urls[:15]:
+        # Pengecekan dimaksimalkan hingga 25 links (v6.92: Giga-Intel Genius Mode)
+        for target in target_urls[:25]:
             try:
                 # v6.25: Gunakan delay kecil agar tidak diciduk sebagai robot saat pindah halaman
                 time.sleep(random.uniform(0.5, 1.5))

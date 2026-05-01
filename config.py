@@ -167,27 +167,21 @@ KATA_KUNCI = [
     "kdkmp", "kopdes", "kmp", "spbu", "bbm"
 ]
 
-# v5.87: Daftar Kata Kunci PRIORITAS (Optimized to 31)
+# v6.92: Daftar Kata Kunci PRIORITAS (Sesuai arahan user terbaru)
 PRIORITY_KATA_KUNCI = [
-    # MBG & SPPG & Program Pemerintah
-    "makan bergizi gratis", "mbg", "keracunan mbg", "sppg", "program pemerintah tni",
-    # Koperasi & Jembatan
-    "koperasi merah putih", "koperasi", "proyek jembatan", "jembatan",
-    # Demonstrasi & Konsolidasi
-    "demo", "unjuk rasa", "aksi damai", "konsolidasi",
-    # TNI & Aparat (Sniper Mode)
-    "TNI", "oknum TNI", "oknum", "TNI viral", "tni bermasalah",
-    "prajurit tni", "pengeroyokan tni",
-    "keluarga TNI", "istri TNI", "batalyon", "militer", "komandan", "proyek tni",
-    # --- ARAHAN PANGLIMA (Trending Pimpinan) ---
-    # 1. Rencana Cerai Anggota
-    "TNI cerai", "TNI gugat cerai", "rencana cerai anggota tni",
-    # 2. Isu LGBT
-    "tentara LGBT", "TNI gay", "isu tni lgbt",
-    # 3. Pernikahan Mewah
-    "pernikahan mewah TNI", "resepsi mewah tentara", "pernikahan mewah tni",
-    # 4. Medsos Keluarga
-    "istri TNI viral", "viral keluarga TNI", "TNI pamer"
+    "mbg",
+    "koperasi merah putih",
+    "batalyon yang bermasalah",
+    "rencana cerai anggota tni",
+    "isu tni lgbt",
+    "pernikahan mewah tni",
+    "tni bermasalah",
+    "oknum tni",
+    "demo",
+    "aksi damai",
+    "unjuk rasa",
+    "konsolidasi",
+    "program pemerintah yang tni terlibat di dalamnya"
 ]
 
 # Pencarian akan mengkombinasikan setiap kata kunci dengan setiap kab/kota
