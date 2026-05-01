@@ -19,7 +19,7 @@ logging.getLogger("requests").setLevel(logging.CRITICAL)
 logging.getLogger("transformers").setLevel(logging.CRITICAL)
 logging.getLogger("huggingface_hub").setLevel(logging.CRITICAL)
 
-from config import KATA_KUNCI, PRIORITY_KATA_KUNCI, KABKOTA_JATIM, CRAWL_INTERVAL_SECONDS, DELAY_BETWEEN_REQUESTS, STEALTH_JITTER, REJECTED_REGIONS, FORBIDDEN_KEYWORDS
+from config import KATA_KUNCI, PRIORITY_KATA_KUNCI, KABKOTA_AREAX, CRAWL_INTERVAL_SECONDS, DELAY_BETWEEN_REQUESTS, STEALTH_JITTER, REJECTED_REGIONS, FORBIDDEN_KEYWORDS
 from crawler import search_news, filter_new_articles, mark_as_processed, is_potensi_ancaman
 from scraper import extract_article
 from profiler import profilasi_berita
@@ -70,24 +70,24 @@ def is_actually_priority(judul, teks):
             if p_low in combined: return True
     return False
 
-def is_wilayah_jatim_smart_guard(judul, teks):
+def is_wilayah_areax_smart_guard(judul, teks):
     """
-    v5.54: Filter berlapis untuk memastikan berita benar-benar terjadi di Jawa Timur.
+    v5.54: Filter berlapis untuk memastikan berita benar-benar terjadi di Area Operasional.
     """
     judul_str = str(judul) if judul else ""
     teks_str = str(teks) if teks else ""
     gabungan = (judul_str + " " + teks_str).lower()
     judul_low = judul_str.lower()
     
-    # LAYER 6 (v5.54): STRICT TITLE GEOFENCE — Jika judul menyebut wilayah luar Jatim
+    # LAYER 6 (v5.54): STRICT TITLE GEOFENCE — Jika judul menyebut wilayah luar AreaX
     for r in REJECTED_REGIONS:
         if r.lower() in judul_low:
-            # Pengecualian jika di judul juga disebut kota Jatim (sangat jarang tapi mungkin)
-            if not any(k.lower() in judul_low for k in KABKOTA_JATIM):
+            # Pengecualian jika di judul juga disebut kota AreaX (sangat jarang tapi mungkin)
+            if not any(k.lower() in judul_low for k in KABKOTA_AREAX):
                 print(f"  [-] GeoFence L6 (Title Location Match): '{r}' ditemukan di judul.")
                 return False
     
-    # LAYER 1: IMMEDIATE REJECT — Kata kunci terlarang absolut (Pasti Luar Jatim)
+    # LAYER 1: IMMEDIATE REJECT — Kata kunci terlarang absolut (Pasti Luar AreaX)
     for kw in FORBIDDEN_KEYWORDS:
         if kw.lower() in gabungan:
             print(f"  [-] GeoFence L1 (Forbidden): '{kw}' terdeteksi.")
@@ -100,33 +100,33 @@ def is_wilayah_jatim_smart_guard(judul, teks):
             terdeteksi_luar.append(reg)
     
     if terdeteksi_luar:
-        # LAYER 3: CROSS-REPORT CHECK — Ada kota Jatim juga? (misal: berita Jatim tentang MBG nasional)
-        ada_kota_jatim = False
-        for kota in KABKOTA_JATIM:
+        # LAYER 3: CROSS-REPORT CHECK — Ada kota AreaX juga? (misal: berita AreaX tentang MBG nasional)
+        ada_kota_areax = False
+        for kota in KABKOTA_AREAX:
             if kota.lower() in gabungan:
-                ada_kota_jatim = True
+                ada_kota_areax = True
                 break
         
-        if not ada_kota_jatim:
-            print(f"  [-] GeoFence L2 (Rejected Region): {terdeteksi_luar}, dan TIDAK ada kota Jatim.")
+        if not ada_kota_areax:
+            print(f"  [-] GeoFence L2 (Rejected Region): {terdeteksi_luar}, dan TIDAK ada kota AreaX.")
             return False
         
         # LAYER 5 (v5.49): SPECIFIC REJECT FOR NATIONAL HUB — Polda Metro, Mabes, Senayan
         national_hubs = ["polda metro jaya", "mabes polri", "senayan", "dpr ri", "jakarta pusat"]
         for hub in national_hubs:
             if hub in gabungan:
-                # Jika ada Hub Nasional, kita butuh bukti Jatim yang SANGAT KUAT (misal: nama kota disebut di awal teks)
-                if not any(kota.lower() in gabungan[:1000] for kota in KABKOTA_JATIM):
-                    print(f"  [-] GeoFence L5 (National Hub Detected): '{hub}' terdeteksi tanpa bukti Jatim di awal artikel.")
+                # Jika ada Hub Nasional, kita butuh bukti AreaX yang SANGAT KUAT (misal: nama kota disebut di awal teks)
+                if not any(kota.lower() in gabungan[:1000] for kota in KABKOTA_AREAX):
+                    print(f"  [-] GeoFence L5 (National Hub Detected): '{hub}' terdeteksi tanpa bukti AreaX di awal artikel.")
                     return False
         
-        # LAYER 4: DOMINANCE CHECK — Jika wilayah luar Jatim disebut lebih banyak daripada wilayah Jatim
-        #          Cegah artikel yang "numpang sebut" nama kota Jatim saja di akhir artikel
+        # LAYER 4: DOMINANCE CHECK — Jika wilayah luar AreaX disebut lebih banyak daripada wilayah AreaX
+        #          Cegah artikel yang "numpang sebut" nama kota AreaX saja di akhir artikel
         hits_luar = sum(gabungan.count(r.lower()) for r in terdeteksi_luar)
-        hits_jatim = sum(gabungan.count(k.lower()) for k in KABKOTA_JATIM)
+        hits_areax = sum(gabungan.count(k.lower()) for k in KABKOTA_AREAX)
         
-        if hits_luar > hits_jatim * 2:
-            print(f"  [-] GeoFence L4 (Dominance): Hits Luar={hits_luar} vs Hits Jatim={hits_jatim}. Artikel didominasi wilayah luar.")
+        if hits_luar > hits_areax * 2:
+            print(f"  [-] GeoFence L4 (Dominance): Hits Luar={hits_luar} vs Hits AreaX={hits_areax}. Artikel didominasi wilayah luar.")
             return False
     
     return True
@@ -146,8 +146,8 @@ def process_artikel(artikel, keyword_asli, lokasi):
     time.sleep(DELAY_BETWEEN_REQUESTS) # Jeda untuk etika scraping
     
     # 1.1 Smart-Guard Filter (v5.9): Cegah halusinasi AI sebelum diproses
-    if not is_wilayah_jatim_smart_guard(hasil_scrape['title'], hasil_scrape['text']):
-        print(f"[-] Smart-Guard: Berita diabaikan otomatis (Lokasi non-Jatim terdeteksi): {hasil_scrape['title'][:50]}...")
+    if not is_wilayah_areax_smart_guard(hasil_scrape['title'], hasil_scrape['text']):
+        print(f"[-] Smart-Guard: Berita diabaikan otomatis (Lokasi non-AreaX terdeteksi): {hasil_scrape['title'][:50]}...")
         return False
 
     # 2. Intelijen Teks & Sentimen via Gemini AI
@@ -165,20 +165,20 @@ def process_artikel(artikel, keyword_asli, lokasi):
         print("[-] Profilasi gagal/error.")
         return False
         
-    # 3. Filter berdasarkan kriteria ancaman / sentimen negatif dan Lokasi Jawa Timur
+    # 3. Filter berdasarkan kriteria ancaman / sentimen negatif dan Lokasi Area Operasional
     is_threat = profil.get("is_negative_threat", False)
-    is_jatim = profil.get("is_in_east_java", True)
+    is_areax = profil.get("is_in_east_java", True)
     
     if not is_threat:
         print(f"[-] Bukan ancaman sentimen negatif murni: {hasil_scrape['title']}")
         return False
         
-    if not is_jatim:
-        print(f"[-] Berita diabaikan karena wilayah kejadian di luar Jawa Timur: {hasil_scrape['title']}")
+    if not is_areax:
+        print(f"[-] Berita diabaikan karena wilayah kejadian di luar Area Operasional: {hasil_scrape['title']}")
         return False
         
     print(f"[!] Ditemukan BERITA ANCAMAN: {hasil_scrape['title']}")
-    # 4. Kirim ke Telegram Channel Kodam
+    # 4. Kirim ke Telegram Channel Institusi
     aktor = profil.get("actors_involved", "Aktor tidak diketahui")
     kontak = profil.get("contact_and_address", "Kontak tidak diketahui")
     fakta = profil.get("fakta_5w1h", "Fakta gagal diekstrak")
@@ -241,16 +241,16 @@ def producer_crawling():
         try:
             # v5.48: TAHAP 1 - CRAWLING PRIORITAS (Dengan Randomisasi Keyword Awal)
             print("[*] Memulai Siklus Prioritas (MBG, Koperasi, Jembatan, TNI)...")
-            prio_loc = list(KABKOTA_JATIM)
+            prio_loc = list(KABKOTA_AREAX)
             prio_kw = list(PRIORITY_KATA_KUNCI)
             random.shuffle(prio_loc)
             random.shuffle(prio_kw) # Acak urutan keyword prioritas
             
             # v6.51: FASE 1 - PENCARIAN AGREGAT JAWA TIMUR (INSTAN)
-            print("[*] FASE 1: Memulai Pencarian Agregat Jawa Timur (Target: Kecepatan)...")
+            print("[*] FASE 1: Memulai Pencarian Agregat Area Operasional (Target: Kecepatan)...")
             for keyword in prio_kw:
-                # Cari langsung dengan wilayah induk "Jawa Timur" untuk hasil cepat
-                artikel_baru = search_news(keyword, "Jawa Timur")
+                # Cari langsung dengan wilayah induk "Area Operasional" untuk hasil cepat
+                artikel_baru = search_news(keyword, "Area Operasional")
                 artikel_belum_diproses = filter_new_articles(artikel_baru)
                 if not artikel_belum_diproses: continue
                 
@@ -259,7 +259,7 @@ def producer_crawling():
                     if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
                         global task_counter
                         task_counter += 1
-                        antrean_berita.put((1, task_counter, (artikel, keyword, "Jawa Timur")))
+                        antrean_berita.put((1, task_counter, (artikel, keyword, "Area Operasional")))
                         print(f"[!] PRIORITAS DITEMUKAN (AGREGAT): '{artikel.get('title','')[:30]}' -> Antrean 1")
                 
                 # v6.91: Jeda antar query diperlambat signifikan (Anti-Bot)
@@ -294,7 +294,7 @@ def producer_crawling():
             # v5.46: TAHAP 2 - CRAWLING REGULER (DIPROSES AKHIR)
             print("[*] Memulai Siklus Reguler (Sampah, Narkoba, KDRT, dll)...")
             kw_random = list(KATA_KUNCI)
-            loc_random = list(KABKOTA_JATIM)
+            loc_random = list(KABKOTA_AREAX)
             random.shuffle(kw_random)
             random.shuffle(loc_random)
             

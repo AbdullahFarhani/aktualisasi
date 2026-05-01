@@ -475,11 +475,11 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, "https://madu.tv/kontak/")
         potensial_links.insert(0, "https://madu.tv/struktur-dalam-media-madutv-nusantara/")
         potensial_links.insert(0, "https://madu.tv/profil-madu-tv/")
-    # Tagar Jatim
-    elif 'tagarjatim.id' in base_domain:
-        potensial_links.insert(0, "https://tagarjatim.id/redaksi-tagar-jatim/")
-        potensial_links.insert(0, "https://tagarjatim.id/tentang-tagar-jatim/")
-    # Kabar Surabaya (Blogspot-style)
+    # Tagar AreaX
+    elif 'tagarareax.id' in base_domain:
+        potensial_links.insert(0, "https://tagarareax.id/redaksi-tagar-areax/")
+        potensial_links.insert(0, "https://tagarareax.id/tentang-tagar-areax/")
+    # Kabar Ibu Kota Area (Blogspot-style)
     elif 'kabarsurabaya.org' in base_domain:
         potensial_links.insert(0, "https://www.kabarsurabaya.org/2021/10/susunan-redaksi-kabar-surabaya.html")
         potensial_links.insert(0, "https://www.kabarsurabaya.org/p/hubungi-kami.html")
@@ -497,10 +497,10 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, f"https://{sub}/kontak")
         potensial_links.insert(0, f"https://{sub}/redaksi")
         potensial_links.insert(0, f"https://{sub}/about-us")
-    # KlikJatim
-    elif 'klikjatim.com' in base_domain:
-        potensial_links.insert(0, "https://klikjatim.com/pages/kontak-kami")
-        potensial_links.insert(0, "https://klikjatim.com/pages/redaksi")
+    # KlikAreaX
+    elif 'klikareax.com' in base_domain:
+        potensial_links.insert(0, "https://klikareax.com/pages/kontak-kami")
+        potensial_links.insert(0, "https://klikareax.com/pages/redaksi")
     # Realita.co
     elif 'realita.co' in base_domain:
         potensial_links.insert(0, "https://realita.co/pages/tentang-kami")
@@ -517,12 +517,12 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, f"https://{sub}/readstatik/115/kontak")
         potensial_links.insert(0, f"https://{sub}/readstatik/1/redaksi")
         potensial_links.insert(0, f"https://{sub}/readstatik/2/tentang-kami")
-    # BuserJatim
-    elif 'buserjatim.com' in base_domain:
-        potensial_links.insert(0, "https://buserjatim.com/box-redaksi/")
+    # BuserAreaX
+    elif 'buserareax.com' in base_domain:
+        potensial_links.insert(0, "https://buserareax.com/box-redaksi/")
     # Tribunnews Regional
     elif 'tribunnews.com' in base_domain:
-        sub = parsed_base.netloc  # e.g. jatim.tribunnews.com
+        sub = parsed_base.netloc  # e.g. areax.tribunnews.com
         if sub != 'www.tribunnews.com':
             potensial_links.insert(0, f"https://{sub}/contact-us/")
             potensial_links.insert(0, f"https://{sub}/redaksi/")
@@ -532,13 +532,13 @@ def ekstrak_halaman_redaksi_global(soup, base_url):
         potensial_links.insert(0, "https://www.jpnn.com/page/tentang-kami")
         potensial_links.insert(0, "https://www.jpnn.com/page/redaksi")
     # === v5.76: Domain Baru dari Evaluasi ===
-    # Kediri Tangguh
+    # Kota I Tangguh
     elif 'kediritangguh.co' in base_domain:
         potensial_links.insert(0, "https://kediritangguh.co/tentang-kami/")
-    # Jurnal Jatim
-    elif 'jurnaljatim.com' in base_domain:
-        potensial_links.insert(0, "https://jurnaljatim.com/tentang-kami/")
-        potensial_links.insert(0, "https://jurnaljatim.com/redaksi/")
+    # Jurnal AreaX
+    elif 'jurnalareax.com' in base_domain:
+        potensial_links.insert(0, "https://jurnalareax.com/tentang-kami/")
+        potensial_links.insert(0, "https://jurnalareax.com/redaksi/")
     # TargetNews
     elif 'targetnews.id' in base_domain:
         potensial_links.insert(0, "https://targetnews.id/redaksi/")
@@ -667,11 +667,11 @@ KANTOR_BERITA = ['antara', 'reuters', 'afp', 'ap', 'bloomberg', 'cnbc', 'bbc', '
 
 # Jaringan Media Terpercaya (Cross-Domain Mapping)
 TRUSTED_NETWORKS = {
-    'malangtimes.com': ['jatimtimes.com', 'malangtimes.com'],
+    'malangtimes.com': ['areaxtimes.com', 'malangtimes.com'],
     'radarkediri.jawapos.com': ['jawapos.com', 'radarkediri.jawapos.com', 'radarmadiun.jawapos.com'],
-    'gresiksatu.com': ['gresiksatu.com', 'klikjatim.com'],
-    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunjatim.com', 'suryamalang.com', 'jatim.tribunnews.com', 'jatim-timur.tribunnews.com'],
-    'rubicnews.com': ['rubicnews.com', 'promedia', 'jatimtimes.com'],
+    'gresiksatu.com': ['gresiksatu.com', 'klikareax.com'],
+    'tribunnews.com': ['tribunnews.com', 'kompas.com', 'tribunareax.com', 'suryamalang.com', 'areax.tribunnews.com', 'areax-timur.tribunnews.com'],
+    'rubicnews.com': ['rubicnews.com', 'promedia', 'areaxtimes.com'],
     'surabayapagi.com': ['surabayapagi.com'],
     'rri.co.id': ['rri.co.id'],
     'jawapos.com': [
@@ -717,7 +717,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
                     for auth in authors:
                         name = auth.get('name') if isinstance(auth, dict) else auth
                         if name and isinstance(name, str) and 3 < len(name) < 50:
-                            # v5.37: Skip nama domain (misal: 'Jatimhariini.co.id', 'Redaksi Kompas')
+                            # v5.37: Skip nama domain (misal: 'AreaXhariini.co.id', 'Redaksi Kompas')
                             if any(ext in name.lower() for ext in ['.co.id', '.com', '.net', '.id', '.org']):
                                 continue
                             if any(nb in name.lower() for nb in ['redaksi', 'admin', 'tim ', 'desk ']):
@@ -740,7 +740,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
             # Pastikan ini nama orang, bukan nama domain/website
             if '.' not in meta_content or ' ' in meta_content:  # Nama orang tidak mengandung titik tanpa spasi
                 metadata.append(f"[EDITOR BERITA (META)]: {meta_content}")
-        elif meta_name in ['content_author', 'article:author', 'dc.author'] and meta_content != 'Jatimhariini.co.id':
+        elif meta_name in ['content_author', 'article:author', 'dc.author'] and meta_content != 'AreaXhariini.co.id':
             if '.' not in meta_content or ' ' in meta_content:  # Bukan nama domain
                 if not any(kb in meta_content.lower() for kb in KANTOR_BERITA + ['redaksi', 'admin', '.co.id', '.net', '.com']):
                     metadata.append(f"[BYLINE UTAMA (META)]: {meta_content}")
@@ -764,7 +764,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
                     metadata.append(f"[BYLINE UTAMA (LINK)]: {name_text}")
 
     # v5.36 GENIUS META-BAR SCAN — Diperluas untuk menangkap berbagai format portal Indonesia
-    # Mencakup: single-author (SuaraSurabaya), post-author, article-author, content-author, writer, contributor
+    # Mencakup: single-author (SuaraIbu Kota Area), post-author, article-author, content-author, writer, contributor
     meta_elements = soup.find_all(
         ['li', 'span', 'small', 'div', 'p', 'a'],
         attrs={'class': re.compile(r'meta|author|byline|credit|reporter|single.author|post.author|article.author|content.author|writer|contributor|penulis', re.I)}
@@ -776,7 +776,7 @@ def ekstrak_metadata_penulis_dari_html(soup):
             if not any(br in t.lower() for br in BLACKLIST_ROLES):
                 metadata.append(f"[BYLINE UTAMA]: {t}")
 
-    # v5.36: DIRECT SCAN 'Laporan oleh' — Pola umum media Indonesia (SuaraSurabaya, Jawa Pos, dll)
+    # v5.36: DIRECT SCAN 'Laporan oleh' — Pola umum media Indonesia (SuaraIbu Kota Area, Jawa Pos, dll)
     # Menangkap format: "Laporan oleh Billy Patoppoi" baik di dalam teks paragraf maupun elemen HTML
     # Negatif stop: Berhenti sebelum nama hari/bulan/kata bukan nama
     _STOP_WORDS = r'(?:senin|selasa|rabu|kamis|jumat|sabtu|minggu|januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|\d)'
@@ -1186,9 +1186,9 @@ def scrape_contact_page(domain, html_content=None):
             target_urls.append(urljoin(base_tribun, '/about/redaksi'))
             target_urls.append(urljoin(base_tribun, '/redaksi'))
             # Beberapa subdomain menggunakan pola berbeda
-            if 'jatim.tribunnews.com' in domain:
-                target_urls.append("https://jatim.tribunnews.com/redaksi")
-                target_urls.append("https://jatim.tribunnews.com/contact-us")
+            if 'areax.tribunnews.com' in domain:
+                target_urls.append("https://areax.tribunnews.com/redaksi")
+                target_urls.append("https://areax.tribunnews.com/contact-us")
             
         # Urutkan agar 'redaksi', 'kontak', 'tentang' muncul di awal
         def priority_score(url):
@@ -1906,7 +1906,7 @@ def extract_article(artikel_obj):
             amp_url = None
             _parsed_ru = urlparse(real_url)
             # Tribun/Surya group: /amp/ prefix setelah netloc
-            if any(d in real_url for d in ['tribunnews.com', 'surya.co.id', 'jatimnow.com', 'detik.com', 'kompas.com']):
+            if any(d in real_url for d in ['tribunnews.com', 'surya.co.id', 'areaxnow.com', 'detik.com', 'kompas.com']):
                 if '/amp/' not in real_url:
                     amp_url = f"{_parsed_ru.scheme}://{_parsed_ru.netloc}/amp{_parsed_ru.path}"
             # Tempo.co: /amp/read/ format (terbukti berhasil 200)

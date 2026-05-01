@@ -1,11 +1,11 @@
-# Sistem Crawling dan Profiling Berita Otomatis (Kodam V/Brawijaya)
+# Sistem Crawling dan Profiling Berita Otomatis
 
-Proyek ini adalah sistem intelijen berita otomatis (Automated News Intelligence) yang dirancang untuk melakukan *crawling*, *scraping*, dan *profiling* secara terus-menerus terhadap berita-berita bersentimen negatif terkait stabilitas nasional, program pemerintah, dan institusi/aktor negara di wilayah Jawa Timur.
+Proyek ini adalah sistem intelijen berita otomatis (Automated News Intelligence) yang dirancang untuk melakukan *crawling*, *scraping*, dan *profiling* secara terus-menerus terhadap berita-berita bersentimen negatif terkait stabilitas nasional, program pemerintah, dan institusi/aktor negara di wilayah Area Operasional.
 
 Sistem ini didukung oleh **Google Gemini API** untuk memahami konteks bahasa Indonesia yang rumit dan menyarikan ancaman secara intelijen (termasuk merangkum 5W+1H, ekstraksi aktor, dan perburuan kontak/nomor telepon redaktur/laman portal).
 
 ## Fitur Utama
-1. **Automated Keyword-Geo Search**: Melakukan kombinasi pencarian berbasis GNews terhadap setiap *keyword* ancaman pada setiap Kota/Kabupaten di Jawa Timur (misal: "Pupuk Ilegal Lamongan").
+1. **Automated Keyword-Geo Search**: Melakukan kombinasi pencarian berbasis GNews terhadap setiap *keyword* ancaman pada setiap Kota/Kabupaten di Area Operasional (misal: "Pupuk Ilegal Kota J").
 2. **Double-layer Scraping**: Mengambil teks artikel murni dan mencari halaman rahasia/kontak redaksi untuk ekstraksi alamat/nomor HP.
 3. **AI Profiling**: AI menyaring berita apakah benar-benar merupakan *ancaman* stabilitas nasional (sentimen negatif) atau bukan (false positive). False positive akan dihiraukan.
 4. **Instant Notification**: Berita positif-ancaman langsung dikemas rapi dalam format *brief* dan dikirimkan secara langsung ke Telegram Channel bot.

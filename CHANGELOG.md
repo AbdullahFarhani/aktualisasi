@@ -22,7 +22,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ## [v6.89] — 2026-04-30
 ### Genius Sniper Patch & Error Handling
 - **Critical Fix (NoneType Error)**: Memperbaiki *bug* variabel `sub_page_text` yang tidak terinisialisasi pada `scrape_contact_page` yang menyebabkan kegagalan deteksi kontak pada portal bersarang.
-- **Tribun Network Special Sniper**: Menambahkan pola khusus untuk membedah halaman redaksi Tribun Network (khususnya subdomain seperti jatim.tribunnews.com) secara langsung dan akurat.
+- **Tribun Network Special Sniper**: Menambahkan pola khusus untuk membedah halaman redaksi Tribun Network (khususnya subdomain seperti areax.tribunnews.com) secara langsung dan akurat.
 - Peningkatan sistem prioritas URL profil: Menambahkan bobot prioritas tertinggi untuk keyword "redaksi" dan "kontak" dibandingkan halaman profil lain.
 
 ---
@@ -43,7 +43,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 - **AI Profiling Prompt v5.88**: Restrukturisasi prompt AI untuk memaksa ekstraksi data media secara terstruktur (Nama Laman, Alamat, Redaksi, Kontak) dan memisahkannya dari aktor berita.
 - **Threat Pattern Expansion**: Memperluas `POLA_ANCAMAN` mencakup isu cerai, lgbt, flexing, dan pamer mewah sesuai arahan pimpinan.
 - **Telegram Template v5.88**: Memperbarui format notifikasi untuk menampilkan profiling media secara lengkap dan rapi.
-- **Trusted Network Expansion**: Menambahkan jaringan media lokal Jatim (Radar & Tribun Jatim Timur) untuk akurasi profiling yang lebih tinggi.
+- **Trusted Network Expansion**: Menambahkan jaringan media lokal AreaX (Radar & Tribun AreaX Timur) untuk akurasi profiling yang lebih tinggi.
 
 ---
 
@@ -79,7 +79,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 - **Priority Bypass**: Jika berita menyinggung isu prioritas (Koperasi, TNI, MBG), sistem menonaktifkan fitur *Auto-Reject* kata positif agar masalah manajerial di balik berita hibah/bantuan tetap terdeteksi.
 - **Expansion Pola Ancaman**: Menambahkan diksi krisis manajerial seperti: *bingung, tak punya kendali, terbengkalai, mubazir, sia-sia, tak beroperasi, mangkrak*.
 - **Machine Learning Override**: Jika isu prioritas terdeteksi oleh Regex, sistem akan mengabaikan klasifikasi "Netral/Positif" dari AI (IndoRoBERTa) demi kewaspadaan intelijen yang lebih tinggi.
-- Memperbaiki kegagalan deteksi pada kasus "Hibah Truk Koperasi Tuban" yang sebelumnya dianggap berita positif.
+- Memperbaiki kegagalan deteksi pada kasus "Hibah Truk Koperasi Kota AB" yang sebelumnya dianggap berita positif.
 
 ---
 
@@ -87,7 +87,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ### Priority Sorting & Genius Re-Classification
 - **Priority Sorting**: Memastikan isu prioritas (TNI, MBG, Yon TP, LGBT, dll) diproses dan dikirim ke Telegram **sebelum** sistem mulai mencari isu reguler.
 - **Genius Re-Classification**: Jika berita di siklus reguler (misal keyword "aparat") ternyata menyinggung isu prioritas, sistem otomatis menaikkan statusnya ke Prioritas 1 agar dikirim lebih dulu.
-- Menjamin isu-isu yang menjadi atensi pimpinan (Panglima/Kasad) selalu menjadi laporan pembuka di setiap siklus.
+- Menjamin isu-isu yang menjadi atensi pimpinan (Pimpinan/Pimpinan) selalu menjadi laporan pembuka di setiap siklus.
 
 ---
 
@@ -127,7 +127,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ---
 
 ## [v5.78] — 2026-04-27
-### Arahan Panglima via Asintel — Trending Kasad
+### Arahan Pimpinan via Asintel — Trending Pimpinan
 - Menambahkan **4 kategori keyword prioritas baru** sesuai arahan pimpinan:
   1. **Rencana Cerai Anggota**: cerai TNI, perceraian TNI, perceraian prajurit, gugat cerai TNI, dll.
   2. **Isu LGBT**: LGBT TNI, LGBT tentara, LGBT militer, gay TNI, lesbian TNI, transgender TNI, dll.
@@ -151,7 +151,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ### +6 Domain Profiling Baru
 - Hardcode injection ditambahkan untuk domain:
   - `kediritangguh.co` → `/tentang-kami/`
-  - `jurnaljatim.com` → `/redaksi/`, `/tentang-kami/`
+  - `jurnalareax.com` → `/redaksi/`, `/tentang-kami/`
   - `targetnews.id` → `/redaksi/`
   - `mediakampung.com` → `/redaksi/`, `/tentang-kami/`, `/kontak-kami/`
   - `penabicara.com` → `/about-us`, `/redaksi`, `/kontak`
@@ -181,7 +181,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 - **Full-Text Fallback**: Mengambil seluruh teks bersih (maks 5000 karakter) jika anchor match gagal, dengan syarat konten mengandung keyword redaksional.
 - **Link visit limit**: Ditingkatkan dari 3 → 5 link per media.
 - **Hardcode Injection** ditambahkan untuk 20+ jaringan media:
-  - Kompas (inside.kompas.com), Espos/Solopos, iNews Regional, Madu TV, Tagar Jatim, Kabar Surabaya, BeritaSatu, BiozTV, Jawapos Radar, KlikJatim, Realita.co, Harian Bhirawa, Detik, Memorandum/Disway, BuserJatim, Tribunnews Regional, JPNN.
+  - Kompas (inside.kompas.com), Espos/Solopos, iNews Regional, Madu TV, Tagar AreaX, Kabar Ibu Kota Area, BeritaSatu, BiozTV, Jawapos Radar, KlikAreaX, Realita.co, Harian Bhirawa, Detik, Memorandum/Disway, BuserAreaX, Tribunnews Regional, JPNN.
 - **Cross-Domain Fallback Tribun**: Subdomain regional fallback ke `www.tribunnews.com/about/`.
 
 ---
@@ -254,7 +254,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ### Multi-Engine Search & RPC Fallback
 - **Mesin Pencari Global**: Menambahkan DuckDuckGo Lite sebagai cadangan pencarian.
 - **RPC ID Fallback Strategy**: Strategi rotasi RPC ID untuk Google News decoder saat endpoint utama gagal.
-- **Greedy Trust**: Jika URL mengandung domain hint atau jaringan Jatim, langsung diambil.
+- **Greedy Trust**: Jika URL mengandung domain hint atau jaringan AreaX, langsung diambil.
 
 ---
 
@@ -295,9 +295,9 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 ## [v5.37] — 2026-04-16
 ### Anchor Non-Href Scanner & Filter Domain
 - **Anchor Non-Href Scanner**: Menangkap pola "Editor: Nama" dalam tag `<a>` tanpa href (Promedia/iNews style).
-- **Filter nama domain**: Mengabaikan nama domain yang terdeteksi sebagai nama orang (misal: "Jatimhariini.co.id").
+- **Filter nama domain**: Mengabaikan nama domain yang terdeteksi sebagai nama orang (misal: "AreaXhariini.co.id").
 - **Scan META Tag**: Deteksi `content_Editor` / `content_Author` (Promedia, IDN Times).
-- **Direct Scan**: Pola "Laporan oleh" (SuaraSurabaya, Jawa Pos style).
+- **Direct Scan**: Pola "Laporan oleh" (SuaraIbu Kota Area, Jawa Pos style).
 - Cakupan scan diperluas — 20 elemen pertama + 40 terakhir.
 
 ---
@@ -421,7 +421,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ## [v5.9] — 2026-04-13
 ### Ultra Geofence
-- Geofence ultra-ketat untuk memastikan hanya berita Jawa Timur yang diproses.
+- Geofence ultra-ketat untuk memastikan hanya berita Area Operasional yang diproses.
 
 ---
 
@@ -447,7 +447,7 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 
 ## [v5.5] — 2026-04-13
 ### Geofence Filter
-- Filter geografis untuk memastikan hanya berita dari Jawa Timur yang diproses.
+- Filter geografis untuk memastikan hanya berita dari Area Operasional yang diproses.
 
 ---
 
@@ -518,5 +518,5 @@ Riwayat perubahan lengkap dari awal pengembangan hingga versi terkini.
 - Scraping dasar konten berita.
 - Integrasi Telegram Bot untuk notifikasi.
 - Integrasi Gemini AI untuk analisis sentimen dan ekstraksi fakta.
-- Geofencing dasar wilayah Jawa Timur.
+- Geofencing dasar wilayah Area Operasional.
 - URL deduplication via processed_urls.json.

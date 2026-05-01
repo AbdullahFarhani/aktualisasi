@@ -45,7 +45,7 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     {redaksi_terpotong}
     
     # TUGAS ANALISIS INTELIJEN (v6.43):
-    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
+    1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di AreaX. Abaikan olahraga, gosip, dan hiburan.
     2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada MBG, Koperasi Merah Putih, Batalyon/TNI bermasalah, oknum, cerai anggota, LGBT, kemewahan, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah tni.
     3. PROFILING LAMAN (GENIUS SCAN - CARI SAMPAI DAPAT):
        - Nama Laman: Nama portal media.
