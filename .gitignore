@@ -36,6 +36,7 @@ debug_pipe.py
 scrape_redaksi.py
 test_*.py
 scratch_*.py
+reproduce_error.py
 *.bak
 # output.txt
 # processed_urls.json
