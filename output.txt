@@ -1,0 +1,119 @@
+
+[*] Menghidupkan Mesin AI Lokal (IndoRoBERTa)... Menginisialisasi Perangkat Keras...
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:   2%|▏         | 4/201 [00:00<00:05, 37.85it/s]Loading weights:  38%|███▊      | 76/201 [00:00<00:00, 322.12it/s]Loading weights:  52%|█████▏    | 105/201 [00:00<00:00, 271.51it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 481.25it/s]
+[+] IndoRoBERTa Berhasil Dimuat dan *Standby*!
+
+[94m==========================================================
+ SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.27 GENIUS) 
+       PARALLEL GIGA-INTEL SURGICAL SNIPER               
+==========================================================[0m
+[*] Memulai Siklus Prioritas (MBG, Koperasi, Jembatan, TNI)...
+[*] FASE 1: Memulai Pencarian Agregat Jawa Timur (Target: Kecepatan)...
+[*] Mencari berita untuk query: 'TNI pamer Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 1 berita.
+[*] Mencari berita untuk query: 'proyek jembatan Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 17 berita.
+[*] Mencari berita untuk query: 'koperasi Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 47 berita.
+[*] Mencari berita untuk query: 'proyek tni Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 7 berita.
+[*] Mencari berita untuk query: 'aksi damai Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 48 berita.
+[*] Mencari berita untuk query: 'pernikahan mewah TNI Jawa Timur'
+[*] Mencari berita untuk query: 'makan bergizi gratis Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 35 berita.
+[*] Mencari berita untuk query: 'isu tni Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 3 berita.
+[*] Mencari berita untuk query: 'resepsi mewah tentara Jawa Timur'
+[*] Mencari berita untuk query: 'koperasi merah putih Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 40 berita.
+[*] Mencari berita untuk query: 'TNI gay Jawa Timur'
+[*] Mencari berita untuk query: 'unjuk rasa Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 33 berita.
+[*] Mencari berita untuk query: 'sppg Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 29 berita.
+[*] Mencari berita untuk query: 'jembatan Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 42 berita.
+[!] PRIORITAS DITEMUKAN (AGREGAT): 'Kakek 79 Tahun Ditemukan Menin' -> Antrean 1
+[Worker-1] Memproses artikel (Priority: 1): Kakek 79 Tahun Ditemukan Meninggal di Ba...
+[*] Sniper v5.90: Memproses 'Kakek 79 Tahun Ditemukan Meninggal di Ba...'
+[+] Sniper Lapis 1 (Huksley): SUCCESS -> https://seblang.com/berita/kakek-79-tahun-ditemuka...
+[*] Sniper Profiling Layer: Checking -> https://seblang.com/...
+[*] Sniper Profiling Layer: Checking -> https://seblang.com/category/berita/...
+[*] Melakukan AI Profiling terhadap: Kakek 79 Tahun Ditemukan Meninggal di Bawah Jembatan Sungai Setail Genteng Banyuwangi
+[*] Menggunakan model: llama-3.3-70b-versatile (Percobaan 1)
+[-] Bukan ancaman sentimen negatif murni: Kakek 79 Tahun Ditemukan Meninggal di Bawah Jembatan Sungai Setail Genteng Banyuwangi
+[*] Stealth Mode: Beristirahat 28 detik...
+[*] Mencari berita untuk query: 'oknum Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 41 berita.
+[*] Mencari berita untuk query: 'TNI gugat cerai Jawa Timur'
+[*] Mencari berita untuk query: 'prajurit tni Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 33 berita.
+[*] Mencari berita untuk query: 'TNI viral Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 10 berita.
+[*] Mencari berita untuk query: 'TNI flexing Jawa Timur'
+[*] Mencari berita untuk query: 'TNI cerai Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 2 berita.
+[*] Mencari berita untuk query: 'program pemerintah tni Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 22 berita.
+[*] Mencari berita untuk query: 'militer Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 10 berita.
+[!] PRIORITAS DITEMUKAN (AGREGAT): 'Kasus Diadili di Pengadilan Mi' -> Antrean 1
+[Worker-1] Memproses artikel (Priority: 1): Kasus Diadili di Pengadilan Militer, Kon...
+[*] Sniper v5.90: Memproses 'Kasus Diadili di Pengadilan Militer, Kon...'
+[+] Sniper Lapis 1 (Huksley): SUCCESS -> https://radarbatu.jawapos.com/nusantara/2605020001...
+[+] Resolving Inertia.js SPA Payload (Giga-Fast Mode)...
+[*] Content Sniper: Primary extraction failed. Using Deep Heuristic Fallback...
+[-] Konten terlalu pendek (0 char) -> Gagal.
+[*] Stealth Mode: Beristirahat 31 detik...
+[*] Mencari berita untuk query: 'istri TNI Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 2 berita.
+[*] Mencari berita untuk query: 'oknum TNI Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 14 berita.
+[*] Mencari berita untuk query: 'batalyon Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 4 berita.
+[*] Mencari berita untuk query: 'konsolidasi Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 34 berita.
+[*] Mencari berita untuk query: 'tentara Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 4 berita.
+[*] Mencari berita untuk query: 'mbg Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 39 berita.
+[*] Mencari berita untuk query: 'demo Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 53 berita.
+[*] Mencari berita untuk query: 'keracunan mbg Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 8 berita.
+[*] Mencari berita untuk query: 'komandan Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 11 berita.
+[*] Mencari berita untuk query: 'TNI Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 44 berita.
+[*] Mencari berita untuk query: 'keluarga TNI Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 7 berita.
+[*] FASE 2: Memulai Pencarian Granular Kab/Kota (Target: Kedalaman)...
+[*] Mencari berita untuk query: 'TNI pamer Jawa Timur'
+[+] GNews Berhasil! (Direct) - Menemukan 1 berita.
+[*] Mencari berita untuk query: 'TNI pamer Ponorogo'
+[*] Mencari berita untuk query: 'TNI pamer Magetan'
+[*] Mencari berita untuk query: 'TNI pamer Kediri'
+[*] Mencari berita untuk query: 'TNI pamer Nganjuk'
+[+] GNews Berhasil! (Direct) - Menemukan 1 berita.
+[*] Mencari berita untuk query: 'TNI pamer Surabaya'
+[*] Mencari berita untuk query: 'TNI pamer Gresik'
+[*] Mencari berita untuk query: 'TNI pamer Tulungagung'
+[*] Mencari berita untuk query: 'TNI pamer Probolinggo'
+[*] Mencari berita untuk query: 'TNI pamer Banyuwangi'
+[*] Mencari berita untuk query: 'TNI pamer Jombang'
+[*] Mencari berita untuk query: 'TNI pamer Bojonegoro'
+[*] Mencari berita untuk query: 'TNI pamer Bondowoso'
+[*] Mencari berita untuk query: 'TNI pamer Pasuruan'
+[*] Mencari berita untuk query: 'TNI pamer Madiun'
+[*] Mencari berita untuk query: 'TNI pamer Ngawi'
+[*] Mencari berita untuk query: 'TNI pamer Jember'
+[*] Mencari berita untuk query: 'TNI pamer Malang'
+[*] Mencari berita untuk query: 'TNI pamer Blitar'
+[*] Mencari berita untuk query: 'TNI pamer Pamekasan'
+[*] Mencari berita untuk query: 'TNI pamer Trenggalek'
+[*] Mencari berita untuk query: 'TNI pamer Sumenep'
+[*] Mencari berita untuk query: 'TNI pamer Situbondo'
+[*] Mencari berita untuk query: 'TNI pamer Pacitan'

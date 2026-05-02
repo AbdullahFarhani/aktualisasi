@@ -10,10 +10,10 @@ __pycache__/
 .env.local
 
 # File Log & Data Sementara Crawler
-output.txt
-test_output.txt
-debug_*.txt
-berita_negatif_*.txt
+# output.txt
+# test_output.txt
+# debug_*.txt
+# berita_negatif_*.txt
 *_dump.*
 *.html
 
@@ -36,7 +36,7 @@ scrape_redaksi.py
 test_*.py
 scratch_*.py
 *.bak
-output.txt
-processed_urls.json
-url_cache.json
+# output.txt
+# processed_urls.json
+# url_cache.json
 __pycache__/
