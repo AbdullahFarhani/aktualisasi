@@ -9,11 +9,11 @@ __pycache__/
 .env
 .env.local
 
-# File Log & Data Sementara Crawler
-# output.txt
-# test_output.txt
-# debug_*.txt
-# berita_negatif_*.txt
+# File Log & Data Sementara Crawler (Diabaikan, gunakan .zip untuk backup)
+*.txt
+!requirements.txt
+*.zip
+!archive_logs_jatim.zip
 *_dump.*
 *.html
 
