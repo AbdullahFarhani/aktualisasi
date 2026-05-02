@@ -348,7 +348,7 @@ def producer_crawling():
 
 def run_sistem():
     print("\033[94m" + "="*58)
-    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.26 GENIUS) ")
+    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.27 GENIUS) ")
     print("       PARALLEL GIGA-INTEL SURGICAL SNIPER               ")
     print("="*58 + "\033[0m")
     

@@ -166,7 +166,8 @@ def decode_spa_html(html_text):
 
     if injected_html:
         if "</body>" in html_text:
-            html_text = html_text.replace("</body>", f"\n<div id='spa-unwrapped' style='display:none;'>{injected_html}</div>\n</body>")
+            # v7.27: Beri class prioritas agar terdeteksi oleh selectors utama
+            html_text = html_text.replace("</body>", f'\n<div class="article-content" id="injected-spa-content">{injected_html}</div>\n</body>')
         else:
             html_text += f"\n<div id='spa-unwrapped'>{injected_html}</div>"
             
