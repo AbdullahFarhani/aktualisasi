@@ -12,6 +12,7 @@ __pycache__/
 # File Log & Data Sementara Crawler (Kini melacak hanya arsip berita negatif)
 *.txt
 !berita_negatif_*.txt
+!kamus_ancaman.txt
 !requirements.txt
 *.zip
 *_dump.*
