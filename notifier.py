@@ -67,14 +67,14 @@ def kirim_notifikasi_telegram(judul, tautan, laman, aktor, kontak, w5_h1):
         except: pass
 
     if dikirim_apapun:
-        print(f"[+] Berhasil mengirim notifikasi v5.88: {judul[:50]}...")
+        print(f"[+] Berhasil mengirim notifikasi v7.27: {judul[:50]}...")
         # Simpan log ke arsip lokal
         tanggal = datetime.datetime.now().strftime("%d-%m-%Y")
         nama_file = f"berita_negatif_{tanggal}.txt"
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         try:
             with open(nama_file, 'a', encoding='utf-8') as f:
-                f.write(f"[{tanggal} {timestamp}] Notifikasi v5.88:\n")
+                f.write(f"[{tanggal} {timestamp}] Notifikasi v7.27:\n")
                 f.write(pesan.replace('<b>', '').replace('</b>', '') + "\n")
                 f.write("-" * 80 + "\n\n")
         except: pass

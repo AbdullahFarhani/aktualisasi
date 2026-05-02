@@ -1932,7 +1932,7 @@ def extract_article(artikel_obj):
     gnews_publisher_name = pub_info.get('title', '')
     gnews_publisher_url = pub_info.get('href', gnews_url)
     
-    print(f"[*] Sniper v5.90: Memproses '{gnews_title[:40]}...'")
+    print(f"[*] Sniper v7.27: Memproses '{gnews_title[:40]}...'")
     
     try:
         # v4.21 URL CACHE CHECK
