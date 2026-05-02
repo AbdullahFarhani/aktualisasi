@@ -1237,11 +1237,14 @@ def scrape_contact_page(domain, html_content=None):
             """Mencari link profil/redaksi dari soup yang diberikan (v6.97 Smart Sniper)."""
             found_any = False
             for a in current_soup.find_all('a', href=True):
-                # Deteksi lokasi link (Footer/Header/Body)
-                parent_tags = [p.name for p in a.parents][:5]
+                # Deteksi lokasi link (Footer/Header/Body) lebih cerdas
+                parent_tags = [p.name for p in a.parents][:10]
+                parent_classes = " ".join([str(p.get('class', '')) for p in a.parents][:10]).lower()
+                
                 location = "Body"
-                if 'footer' in parent_tags: location = "Footer"
-                elif 'header' in parent_tags or 'nav' in parent_tags: location = "Header"
+                if 'footer' in parent_tags or 'footer' in parent_classes: location = "Footer"
+                elif any(t in parent_tags for t in ['header', 'nav']) or any(c in parent_classes for c in ['header', 'nav', 'menu', 'topbar']): 
+                    location = "Header"
                 
                 # Periksa teks link, title, aria-label, dan data-tooltip
                 teks_link = a.get_text().lower().strip()
@@ -1295,12 +1298,18 @@ def scrape_contact_page(domain, html_content=None):
                     
         # v6.95: Special Network Handling (Priority)
         if 'tribunnews.com' in domain:
-            base_tribun = domain.split('tribunnews.com')[0] + 'tribunnews.com'
+            # v7.03: Tambahkan central about/contact untuk jaringan Tribun
+            target_urls.append("https://www.tribunnews.com/about/")
+            target_urls.append("https://www.tribunnews.com/privacy-policy/")
+            
+            base_tribun = f"{urlparse(domain).scheme}://{urlparse(domain).netloc}"
             target_urls.append(urljoin(base_tribun, '/about/'))
             target_urls.append(urljoin(base_tribun, '/contact-us/'))
+            target_urls.append(urljoin(base_tribun, '/redaksi/'))
             target_urls.append(urljoin(base_tribun, '/about/redaksi'))
-            target_urls.append(urljoin(base_tribun, '/redaksi'))
-            if 'jatim.tribunnews.com' in domain:
+            if 'surabaya.tribunnews.com' in domain or 'jatim.tribunnews.com' in domain:
+                target_urls.append("https://surabaya.tribunnews.com/redaksi")
+                target_urls.append("https://surabaya.tribunnews.com/contact-us")
                 target_urls.append("https://jatim.tribunnews.com/redaksi")
                 target_urls.append("https://jatim.tribunnews.com/contact-us")
             
@@ -1316,17 +1325,15 @@ def scrape_contact_page(domain, html_content=None):
             cur_year = str(datetime.datetime.now().year)
             site_name = urlparse(domain).netloc.replace('www.', '').split('.')[0]
             
-            fallback_paths = [
-                '/redaksi', '/tentang-kami', '/contact-us', '/about-us', '/kontak-kami',
-                '/susunan-redaksi', '/info-redaksi', '/hubungi-kami', '/pedoman-siber', '/about', '/kontak',
-                '/boks-redaksi', '/editorial', '/manajemen', '/profil-media', '/struktur-organisasi',
-                '/page/tentang-kami', '/page/redaksi', '/page/kontak-kami', '/page/contact-us',
-                '/site/page/tentang', '/site/page/redaksi', '/site/page/kontak', '/halaman/tentang-kami',
-                '/about?active=redaksi', '/about?active=about-us', '/about?active=kontak',
-                f'/redaksi-{site_name}-{cur_year}', f'/susunan-redaksi-{cur_year}', f'/redaksi-{cur_year}'
+            # v7.03: Explicit common news paths
+            news_paths = [
+                '/redaksi', '/tentang-kami', '/hubungi-kami', '/contact-us', '/about-us', 
+                '/kontak-kami', '/susunan-redaksi', '/info-redaksi', '/about', '/kontak',
+                '/page/tentang-kami', '/page/redaksi', '/page/hubungi-kami', '/redaksi-kami',
+                '/info-iklan', '/advertise', '/pedoman-media-siber', '/pedoman-siber'
             ]
             
-            for p in fallback_paths:
+            for p in news_paths:
                 fallback_url = urljoin(domain, p)
                 if fallback_url not in target_urls:
                     target_urls.append(fallback_url)
@@ -1335,7 +1342,7 @@ def scrape_contact_page(domain, html_content=None):
         def priority_score(url):
             score = 0
             url_low = url.lower()
-            if any(p in url_low for p in ['/redaksi', '/about', '/kontak', 'contact', 'tentang', 'iklan', 'advertise']):
+            if any(p in url_low for p in ['/redaksi', '/about', '/kontak', 'contact', 'tentang', 'iklan', 'advertise', 'hubungi']):
                 score += 10
             if 'inside.kompas.com' in url_low or 'tribunnews.com/about' in url_low:
                 score += 20 # High priority for known network pages

@@ -49,12 +49,13 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v7.00):
+    # TUGAS ANALISIS INTELIJEN (v7.06):
     1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
     2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada prioritas: mbg, koperasi merah putih, batalyon bermasalah, cerai anggota tni, lgbt tni, nikah mewah tni, tni bermasalah, oknum tni, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah dengan tni.
-    3. PROFILING LAMAN (GENIUS SCAN - CARI SAMPAI DAPAT):
-       - Halaman seperti "redaksi", "kontak", "tentang kami", footer, header, dan body laman harus dicari teliti.
-       - Kontak Laman: HANYA ISI jika ditemukan nomor telepon/WA/Email yang valid di teks sumber. Jika tidak ada, biarkan "".
+    3. PROFILING LAMAN (Surgical Precision - Telusuri Setiap Bagian):
+       - Hubungi Kami, Redaksi, Tentang Kami, dan Pedoman Siber adalah kunci utama.
+       - Untuk jaringan besar (misal: Tribun), jika info tidak ada di laman lokal, periksa info dari laman pusat (www.tribunnews.com) yang disediakan.
+       - Kontak Laman: NOMOR TELEPON ATAU NOMOR WA ADALAH PRIORITAS UTAMA. Pastikan mengekstrak dengan sangat teliti dari teks yang disediakan.
     4. IDENTIFIKASI AKTOR: Pisahkan Aktor Berita vs Kru Media.
     
     KEMBALIKAN JSON (STRICT FORMAT):

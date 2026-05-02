@@ -348,8 +348,8 @@ def producer_crawling():
 
 def run_sistem():
     print("\033[94m" + "="*58)
-    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.00 GENIUS) ")
-    print("       PARALLEL GIGA-INTEL SURGICAL PROFILING            ")
+    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.10 GENIUS) ")
+    print("       PARALLEL GIGA-INTEL SURGICAL SNIPER               ")
     print("="*58 + "\033[0m")
     
     # Menghidupkan 1 Pekerja Konsumen/Profiler (Groq API: 30 RPM, super cepat!)
