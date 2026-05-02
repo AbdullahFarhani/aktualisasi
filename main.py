@@ -256,7 +256,7 @@ def producer_crawling():
                 
                 for artikel in artikel_belum_diproses:
                     mark_as_processed(artikel.get('url'))
-                    if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
+                    if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=False):
                         global task_counter
                         task_counter += 1
                         antrean_berita.put((1, task_counter, (artikel, keyword, "Jawa Timur")))
@@ -276,7 +276,7 @@ def producer_crawling():
                     
                     for artikel in artikel_belum_diproses:
                         mark_as_processed(artikel.get('url'))
-                        if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
+                        if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=False):
                             task_counter += 1
                             antrean_berita.put((1, task_counter, (artikel, keyword, lokasi)))
                             print(f"[!] PRIORITAS DITEMUKAN (GRANULAR): '{artikel.get('title','')[:30]}' -> Antrean 1")
@@ -309,7 +309,7 @@ def producer_crawling():
                         
                     for artikel in artikel_belum_diproses:
                         mark_as_processed(artikel.get('url'))
-                        if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=True):
+                        if is_potensi_ancaman(artikel.get('title', ''), artikel.get('description', ''), strict_mode=False):
                             # v5.83: Genius Re-Classification
                             # Jika di siklus reguler ditemukan keyword prioritas, naikkan ke Antrean 1
                             if is_actually_priority(artikel.get('title', ''), artikel.get('description', '')):
@@ -348,7 +348,7 @@ def producer_crawling():
 
 def run_sistem():
     print("\033[94m" + "="*58)
-    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.25 GENIUS) ")
+    print(" SISTEM CRAWLING BERITA KODAM V/BRAWIJAYA (v7.26 GENIUS) ")
     print("       PARALLEL GIGA-INTEL SURGICAL SNIPER               ")
     print("="*58 + "\033[0m")
     
