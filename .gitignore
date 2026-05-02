@@ -9,12 +9,12 @@ __pycache__/
 .env
 .env.local
 
-# File Log & Data Sementara Crawler (Kini melacak hanya arsip berita negatif)
+# File Log & Data Sementara Crawler (Hanya zip dan kamus/req yang dilacak)
 *.txt
-!berita_negatif_*.txt
 !kamus_ancaman.txt
 !requirements.txt
 *.zip
+!berita_negatif_archives.zip
 *_dump.*
 *.html
 
