@@ -131,9 +131,10 @@ def decode_spa_html(html_text):
             output_list.append(f'<div>[KONTAK-JSON]: {p}</div>\n')
             
         # 3. Teks Panjang (Maks 200 matches)
-        strings = re.findall(r':\s*"([^"]{10,300})"', raw_json_str)
-        for s in list(set(strings))[:200]:
-            if any(kw in s.lower() for kw in ['redaksi', 'editor', 'reporter', 'alamat', 'kantor', 'telp', 'email']):
+        # v7.21: Tingkatkan limit karakter ke 2000 untuk menangkap paragraf utuh
+        strings = re.findall(r':\s*"([^"]{10,2000})"', raw_json_str)
+        for s in list(set(strings))[:300]:
+            if len(s) > 100 or any(kw in s.lower() for kw in ['redaksi', 'editor', 'reporter', 'alamat', 'kantor', 'telp', 'email', 'fakta']):
                 output_list.append(f'<div>{s}</div>\n')
 
     injected_html_list = []
@@ -1325,11 +1326,12 @@ def scrape_contact_page(domain, html_content=None):
             cur_year = str(datetime.datetime.now().year)
             site_name = urlparse(domain).netloc.replace('www.', '').split('.')[0]
             
-            # v7.03: Explicit common news paths
+            # v7.20: Expanded common news paths (Added plural /pages/)
             news_paths = [
                 '/redaksi', '/tentang-kami', '/hubungi-kami', '/contact-us', '/about-us', 
                 '/kontak-kami', '/susunan-redaksi', '/info-redaksi', '/about', '/kontak',
                 '/page/tentang-kami', '/page/redaksi', '/page/hubungi-kami', '/redaksi-kami',
+                '/pages/redaksi', '/pages/tentang-kami', '/pages/hubungi-kami', '/pages/kontak',
                 '/info-iklan', '/advertise', '/pedoman-media-siber', '/pedoman-siber'
             ]
             
@@ -1500,8 +1502,21 @@ def extract_clean_article_body(soup, url):
     # Fallback: Cari div dengan densitas teks tertinggi
     paragraphs = soup.find_all("p")
     if paragraphs:
-        return "\n\n".join([p.get_text().strip() for p in paragraphs if len(p.get_text()) > 30])
-    return ""
+        txt = "\n\n".join([p.get_text().strip() for p in paragraphs if len(p.get_text()) > 30])
+        if len(txt) > 100: return txt
+        
+    # v7.21: Giga-Heuristic Fallback (Deep Scan)
+    print("[*] Content Sniper: Primary extraction failed. Using Deep Heuristic Fallback...")
+    all_blocks = soup.find_all(['div', 'section', 'article'])
+    best_block = ""
+    for block in all_blocks:
+        b_txt = block.get_text(" ", strip=True)
+        if len(b_txt) > len(best_block) and len(b_txt) < 15000:
+            # Pastikan blok mengandung banyak spasi (densitas kalimat)
+            if b_txt.count(" ") > len(b_txt) // 10:
+                best_block = b_txt
+    
+    return best_block if len(best_block) > 100 else ""
 
 def genius_search_fallback(title, publisher=""):
     """

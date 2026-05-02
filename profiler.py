@@ -32,7 +32,7 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
        - HANYA ambil nomor WhatsApp/Telepon AKTUAL (Contoh: 081..., +62..., 021...).
        - JANGAN PERNAH mengarang nomor telepon. 
        - JANGAN PERNAH mengambil angka dari URL, Tanggal Berita, atau Kode Pos sebagai nomor telepon/WA.
-       - JANGAN PERNAH mengisi nomor dengan angka berulang seperti +202020... atau 020202... jika data tidak ada.
+       - JIKA DATA KOSONG: Jangan tulis labelnya. (Contoh: Jika hanya ada email, cukup tulis "Email: x@y.com"). Jangan tulis "Nomor WA: , Email: x@y.com".
        - JIKA TERDAPAT BANYAK NOMOR: Utamakan nomor yang berlabel "Redaksi" atau "WhatsApp".
        - ABAIKAN nomor yang berlabel "Fax" atau "Faks".
        - JANGAN PERNAH mengambil link WhatsApp Channel atau link Share.
@@ -49,13 +49,13 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v7.06):
+    # TUGAS ANALISIS INTELIJEN (v7.21):
     1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
     2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada prioritas: mbg, koperasi merah putih, batalyon bermasalah, cerai anggota tni, lgbt tni, nikah mewah tni, tni bermasalah, oknum tni, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah dengan tni.
     3. PROFILING LAMAN (Surgical Precision - Telusuri Setiap Bagian):
        - Hubungi Kami, Redaksi, Tentang Kami, dan Pedoman Siber adalah kunci utama.
-       - Untuk jaringan besar (misal: Tribun), jika info tidak ada di laman lokal, periksa info dari laman pusat (www.tribunnews.com) yang disediakan.
-       - Kontak Laman: NOMOR TELEPON ATAU NOMOR WA ADALAH PRIORITAS UTAMA. Pastikan mengekstrak dengan sangat teliti dari teks yang disediakan.
+       - Untuk portal seperti mili.id, pastikan mengekstrak info Redaksi dari teks sumber yang tersedia.
+       - Kontak Laman: Kembalikan dalam format satu baris bersih. Contoh: "Nomor WA: 0812..., Email: redaksi@mail.com". Jika nihil, kembalikan "".
     4. IDENTIFIKASI AKTOR: Pisahkan Aktor Berita vs Kru Media.
     
     KEMBALIKAN JSON (STRICT FORMAT):
@@ -67,7 +67,7 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
             "nama_laman": "Nama Laman",
             "alamat_laman": "Alamat Laman",
             "jajaran_redaksi_laman": "Jajaran Redaksi",
-            "kontak_laman": "Nomor Telepon: (No), Nomor WA: (No), Email: (Email)",
+            "kontak_laman": "Nomor WA: (No), Email: (Email)",
             "informasi_profiling_laman_lainnya": "Informasi Profiling Lainnya"
         }},
         "fakta_5w1h": "Analisis fakta mendalam (2-3 Paragraf)"
