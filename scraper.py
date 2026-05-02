@@ -1191,7 +1191,7 @@ def scrape_contact_page(domain, html_content=None):
                             found_contacts.append(h.strip())
             return list(set(found_contacts))
 
-        all_raw_text = soup.get_text(" ", strip=True)
+        all_raw_text = soup.get_text("\n", strip=True)
         phones = extract_contacts_from_text(all_raw_text)
         emails = re.findall(r'[a-zA-Z0-9._%+-]+(?:@|\(at\)|\[at\])[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', all_raw_text, re.I)
         
