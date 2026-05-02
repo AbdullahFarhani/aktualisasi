@@ -49,8 +49,9 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
     # INFORMASI HALAMAN KONTAK & REDAKSI PORTAL:
     {redaksi_terpotong}
     
-    # TUGAS ANALISIS INTELIJEN (v7.21):
+    # TUGAS ANALISIS INTELIJEN (v7.22):
     1. STRICT GEOFENCE JAWA TIMUR: Fokus kejadian fisik di Jatim. Abaikan olahraga, gosip, dan hiburan.
+       - EVENT LOCATION IS KEY: Meskipun laman berita berbasis di Jatim (misal: Radar Batu, Surabaya.kompas), jika kejadiannya di JAKARTA, JABODETABEK, atau LUAR JATIM (misal: Pengadilan Militer Jakarta Timur), maka 'is_in_east_java' harus FALSE.
     2. SENTIMEN NEGATIF & ANCAMAN: Deteksi narasi negatif pada prioritas: mbg, koperasi merah putih, batalyon bermasalah, cerai anggota tni, lgbt tni, nikah mewah tni, tni bermasalah, oknum tni, demo, aksi damai, unjuk rasa, konsolidasi, program pemerintah dengan tni.
     3. PROFILING LAMAN (Surgical Precision - Telusuri Setiap Bagian):
        - Hubungi Kami, Redaksi, Tentang Kami, dan Pedoman Siber adalah kunci utama.

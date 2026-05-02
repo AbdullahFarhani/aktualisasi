@@ -79,7 +79,11 @@ FORBIDDEN_KEYWORDS = [
     "Kuta Bali", "Badung Bali", "Baturiti",
     # DIY (sangat spesifik, tidak mungkin salah sangka)
     "Daerah Istimewa Yogyakarta", "Provinsi DIY",
-    # Tokoh Nasional (Jika tanpa konteks Jatim yang kuat - v5.49)
+    # Wilayah Nasional/Jakarta (v7.22: Strict Block)
+    "Pengadilan Militer Jakarta Timur", "Jakarta Timur", "Jakarta Pusat", "Jakarta Selatan", 
+    "Jakarta Utara", "Jakarta Barat", "Kepulauan Seribu", "Monas", "Istana Negara",
+    "Gedung DPR", "Gedung MPR", "KPK RI", "Kementerian", "Menteri",
+    # Institusi Pusat
     "Polda Metro Jaya", "Mabes Polri", "Uya Kuya", "Artis Ibu Kota",
     "Kabupaten Gunungkidul", "Kabupaten Sleman", "Kabupaten Bantul",
     "Kabupaten Kulon Progo", "Kota Yogyakarta",
