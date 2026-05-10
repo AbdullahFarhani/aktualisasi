@@ -119,7 +119,7 @@ def profilasi_berita(judul, teks, laman_redaksi, keyword, lokasi, aktor_metadata
                 active_model = GROQ_MODELS[current_model_index]
                 
                 print(f"[!] Berpindah ke model berikutnya: {active_model}...")
-                time.sleep(2) # Jeda singkat etiket API
+                time.sleep(10) # v7.28: Jeda 10 detik etiket API untuk menghindari blokir permanen (Anti-AI-Block)
             elif "413" in error_msg or "too large" in error_msg.lower():
                 print(f"[-] Teks terlalu besar. Memotong dan mencoba ulang...")
                 teks_terpotong = teks_terpotong[:2000]

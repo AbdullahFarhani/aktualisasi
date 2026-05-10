@@ -192,7 +192,25 @@ def search_news(keyword, location):
     except Exception as e:
         print(f"[!] GNews Resilient Error: {e}")
         
-    # v6.81: Sesuai instruksi, jika GNews nihil, langsung lanjut ke kata kunci berikutnya tanpa fallback DDG
+    # v7.28: Sesuai instruksi, aktifkan kembali fallback DuckDuckGo untuk memastikan sistem tidak terblokir (Zero-Block)
+    try:
+        print("[!] Mencoba fallback DuckDuckGo Search (Lapis 2)...")
+        results = DDGS().news(keywords=query, timelimit="d", max_results=10)
+        if results:
+            articles = []
+            for r in results:
+                articles.append({
+                    'title': r.get('title', ''),
+                    'description': r.get('body', ''),
+                    'url': r.get('url', ''),
+                    'publisher': {'title': r.get('source', '')},
+                    'published date': r.get('date', '')
+                })
+            print(f"[+] DDG Berhasil! Menemukan {len(articles)} berita.")
+            return articles
+    except Exception as e:
+        print(f"[-] DDG Error: {e}")
+        
     return []
 
 def filter_new_articles(articles, history_file='processed_urls.json'):

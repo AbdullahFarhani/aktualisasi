@@ -200,7 +200,7 @@ PRIORITY_KATA_KUNCI = [
 # Konfigurasi Crawling
 GNEWS_LANGUAGE = 'id'
 GNEWS_COUNTRY = 'ID'
-GNEWS_PERIOD = '1d' # Perayapan awal dalam kurun waktu 1 hari terakhir
+GNEWS_PERIOD = '1d' # Crawling berita dalam kurun waktu 1 hari terakhir
 CRAWL_INTERVAL_SECONDS = 1800 # Waktu tunggu jika siklus sudah selesai (30 menit)
 # v6.50: GIGA-THROTTLE (Anti-Lama Edition)
 USE_CLOUDFLARE_DNS = True 
